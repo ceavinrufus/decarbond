@@ -6,6 +6,8 @@ import {
   IconBrandTabler,
   IconSettings,
   IconUserBolt,
+  IconSolarPanel2,
+  IconMapPin2,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -17,36 +19,23 @@ export function SidebarComponent() {
     {
       label: "Dashboard",
       href: "#",
-      icon: (
-        <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      icon: <IconBrandTabler className="text-white h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Profile",
+      label: "Solar Planning",
       href: "#",
-      icon: (
-        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      icon: <IconSolarPanel2 className="text-white h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Settings",
+      label: "Pipeline Design",
       href: "#",
-      icon: (
-        <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Logout",
-      href: "#",
-      icon: (
-        <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      icon: <IconMapPin2 className="text-white h-5 w-5 flex-shrink-0" />,
     },
   ];
   const [open, setOpen] = useState(false);
   return (
     <Sidebar open={open} setOpen={setOpen}>
-      <SidebarBody className="justify-between gap-10 h-screen border-r-2">
+      <SidebarBody className="justify-between gap-10 h-screen border-r-2 bg-primary">
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           {open ? <Logo /> : <LogoIcon />}
           <div className="mt-8 flex flex-col gap-2">
@@ -58,7 +47,7 @@ export function SidebarComponent() {
         <div>
           <SidebarLink
             link={{
-              label: "Manu Arora",
+              label: "Ceavin Rufus",
               href: "#",
               icon: (
                 <Image
@@ -80,18 +69,11 @@ export const Logo = () => {
   return (
     <Link
       href="/"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black text-white text-center rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0">
-        JS
+      <div className="relative h-6 w-[92px]">
+        <Image src="/text-logo-white.png" alt="Decarbond" fill priority />
       </div>
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-medium text-black dark:text-white whitespace-pre"
-      >
-        JobSage
-      </motion.span>
     </Link>
   );
 };
@@ -99,10 +81,10 @@ export const LogoIcon = () => {
   return (
     <Link
       href="/"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black text-white text-center rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0">
-        JS
+      <div className="relative size-6">
+        <Image src="/logo-white.png" alt="Decarbond" fill priority />
       </div>
     </Link>
   );
