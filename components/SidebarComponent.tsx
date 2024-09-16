@@ -18,17 +18,17 @@ export function SidebarComponent() {
   const links = [
     {
       label: "Dashboard",
-      href: "#",
+      href: "/",
       icon: <IconBrandTabler className="text-white h-5 w-5 flex-shrink-0" />,
     },
     {
       label: "Solar Planning",
-      href: "#",
+      href: "/solar-planning",
       icon: <IconSolarPanel2 className="text-white h-5 w-5 flex-shrink-0" />,
     },
     {
       label: "Pipeline Design",
-      href: "#",
+      href: "/pipeline-design",
       icon: <IconMapPin2 className="text-white h-5 w-5 flex-shrink-0" />,
     },
   ];

@@ -6,8 +6,10 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-6 w-full">
       <div className="flex flex-col justify-center items-center mb-8 text-center">
-        <h1 className="text-5xl font-bold mb-2">Decarbond</h1>
-        <p className="text-xl font-semibold mb-5">
+        <div className="relative h-24 w-96">
+          <Image src="/text-logo.png" alt="Decarbond" fill priority />
+        </div>
+        <p className="text-xl font-semibold my-5">
           The Ultimate One-For-All{" "}
           <span className="underline">Decarbonization Design</span> and{" "}
           <span className="underline">Planning Software</span>
