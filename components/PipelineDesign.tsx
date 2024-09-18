@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   GoogleMap,
   LoadScript,
@@ -31,7 +31,14 @@ const PipelineDesign: React.FC = () => {
     lng: number;
   } | null>(null);
 
-  const elevationService = new google.maps.ElevationService();
+  const elevationServiceRef = useRef<google.maps.ElevationService | null>(null);
+
+  // Initialize ElevationService when the map is loaded
+  const onLoadMap = useCallback(() => {
+    if (!elevationServiceRef.current && window.google) {
+      elevationServiceRef.current = new google.maps.ElevationService();
+    }
+  }, []);
 
   // Handle click on map to add markers and update polyline
   const handleMapClick = useCallback(
@@ -53,29 +60,26 @@ const PipelineDesign: React.FC = () => {
   );
 
   // Handle right-click on the map to show elevation info
-  const handleMapRightClick = useCallback(
-    (e: google.maps.MapMouseEvent) => {
-      if (e.latLng) {
-        const clickedPosition = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+  const handleMapRightClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng && elevationServiceRef.current) {
+      const clickedPosition = { lat: e.latLng.lat(), lng: e.latLng.lng() };
 
-        // Request elevation data for the clicked point
-        elevationService.getElevationForLocations(
-          {
-            locations: [clickedPosition],
-          },
-          (results, status) => {
-            if (status === "OK" && results && results[0]) {
-              setElevation(results[0].elevation);
-              setInfoWindowPosition(clickedPosition); // Show info window at clicked position
-            } else {
-              setElevation(null);
-            }
+      // Request elevation data for the clicked point
+      elevationServiceRef.current.getElevationForLocations(
+        {
+          locations: [clickedPosition],
+        },
+        (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            setElevation(results[0].elevation);
+            setInfoWindowPosition(clickedPosition); // Show info window at clicked position
+          } else {
+            setElevation(null);
           }
-        );
-      }
-    },
-    [elevationService]
-  );
+        }
+      );
+    }
+  }, []);
 
   return (
     <div className="w-full">
@@ -86,6 +90,7 @@ const PipelineDesign: React.FC = () => {
           mapContainerStyle={containerStyle}
           center={center}
           zoom={10}
+          onLoad={onLoadMap} // Ensure the map is loaded before using the ElevationService
           onClick={handleMapClick}
           onRightClick={handleMapRightClick} // Handle right-click
         >
