@@ -28,36 +28,21 @@ const PipelineDesign: React.FC = () => {
   // Handle click on map to add markers and update polyline
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
-      if (e.latLng && markers.length < 2) {
+      if (e.latLng) {
         const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() };
         setMarkers((current) => [...current, newMarker]);
 
         // If two markers exist, create a polyline between them
-        if (markers.length === 1) {
-          setPolylines((current) => [...current, [markers[0], newMarker]]);
+        if (markers.length >= 1) {
+          setPolylines((current) => [
+            ...current,
+            [markers[markers.length - 1], newMarker],
+          ]);
         }
       }
     },
     [markers]
   );
-
-  // Undo last marker and update polyline
-  const handleUndo = () => {
-    setMarkers((current) => {
-      const updatedMarkers = current.slice(0, -1);
-      // Update polylines
-      if (updatedMarkers.length === 1) {
-        setPolylines([]);
-      }
-      return updatedMarkers;
-    });
-  };
-
-  // Reset markers and polylines
-  const handleReset = () => {
-    setMarkers([]);
-    setPolylines([]);
-  };
 
   return (
     <div className="w-full">
@@ -71,9 +56,8 @@ const PipelineDesign: React.FC = () => {
           onClick={handleMapClick}
         >
           {/* Render markers */}
-          {markers.map((marker, index) => (
-            <Marker key={index} position={marker} />
-          ))}
+          <Marker position={markers[0]} />
+          <Marker position={markers[markers.length - 1]} />
 
           {/* Render polylines */}
           {polylines.map((path, index) => (
@@ -91,14 +75,9 @@ const PipelineDesign: React.FC = () => {
       </LoadScript>
 
       <div className="mt-4 flex space-x-2">
-        {/* Reset Button */}
-        <Button onClick={handleReset} variant="destructive">
-          Reset
-        </Button>
-
         {/* Undo Button */}
-        <Button onClick={handleUndo} variant="default">
-          Undo
+        <Button onClick={() => {}} variant="default">
+          Save
         </Button>
       </div>
     </div>
