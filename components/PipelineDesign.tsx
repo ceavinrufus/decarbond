@@ -6,6 +6,7 @@ import {
   LoadScript,
   Marker,
   Polyline,
+  InfoWindow,
 } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
 
@@ -24,6 +25,13 @@ const PipelineDesign: React.FC = () => {
   const [polylines, setPolylines] = useState<{ lat: number; lng: number }[][]>(
     []
   );
+  const [elevation, setElevation] = useState<number | null>(null);
+  const [infoWindowPosition, setInfoWindowPosition] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
+  const elevationService = new google.maps.ElevationService();
 
   // Handle click on map to add markers and update polyline
   const handleMapClick = useCallback(
@@ -44,6 +52,31 @@ const PipelineDesign: React.FC = () => {
     [markers]
   );
 
+  // Handle right-click on the map to show elevation info
+  const handleMapRightClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        const clickedPosition = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+
+        // Request elevation data for the clicked point
+        elevationService.getElevationForLocations(
+          {
+            locations: [clickedPosition],
+          },
+          (results, status) => {
+            if (status === "OK" && results && results[0]) {
+              setElevation(results[0].elevation);
+              setInfoWindowPosition(clickedPosition); // Show info window at clicked position
+            } else {
+              setElevation(null);
+            }
+          }
+        );
+      }
+    },
+    [elevationService]
+  );
+
   return (
     <div className="w-full">
       <LoadScript
@@ -54,6 +87,7 @@ const PipelineDesign: React.FC = () => {
           center={center}
           zoom={10}
           onClick={handleMapClick}
+          onRightClick={handleMapRightClick} // Handle right-click
         >
           {/* Render markers */}
           <Marker position={markers[0]} />
@@ -71,6 +105,25 @@ const PipelineDesign: React.FC = () => {
               }}
             />
           ))}
+
+          {/* Show InfoWindow with elevation and coordinates */}
+          {infoWindowPosition && elevation !== null && (
+            <InfoWindow
+              position={infoWindowPosition}
+              onCloseClick={() => setInfoWindowPosition(null)}
+            >
+              <div>
+                <p>
+                  <strong>Coordinates:</strong>{" "}
+                  {infoWindowPosition.lat.toFixed(6)},{" "}
+                  {infoWindowPosition.lng.toFixed(6)}
+                </p>
+                <p>
+                  <strong>Elevation:</strong> {elevation.toFixed(2)} meters
+                </p>
+              </div>
+            </InfoWindow>
+          )}
         </GoogleMap>
       </LoadScript>
 
