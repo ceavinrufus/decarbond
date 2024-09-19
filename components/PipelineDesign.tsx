@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   GoogleMap,
   LoadScript,
@@ -9,6 +9,8 @@ import {
   InfoWindow,
 } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 const containerStyle = {
   width: "100%", // Full width of the screen
@@ -21,10 +23,12 @@ const center = {
 };
 
 const PipelineDesign: React.FC = () => {
+  const [showMarker, setShowMarker] = useState(false);
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
   const [polylines, setPolylines] = useState<{ lat: number; lng: number }[][]>(
     []
   );
+  const [focusIndex, setFocusIndex] = useState<number | null>(null); // Index for focused marker
   const [elevation, setElevation] = useState<number | null>(null);
   const [infoWindowPosition, setInfoWindowPosition] = useState<{
     lat: number;
@@ -45,18 +49,27 @@ const PipelineDesign: React.FC = () => {
     (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
         const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-        setMarkers((current) => [...current, newMarker]);
 
-        // If two markers exist, create a polyline between them
-        if (markers.length >= 1) {
-          setPolylines((current) => [
-            ...current,
-            [markers[markers.length - 1], newMarker],
-          ]);
+        // If there's a focused marker, create a branch from that marker
+        if (focusIndex !== null) {
+          const focusedMarker = markers[focusIndex];
+          setPolylines((current) => [...current, [focusedMarker, newMarker]]);
+        } else {
+          // If two markers exist, create a polyline between them (default behavior)
+          if (markers.length >= 1) {
+            setPolylines((current) => [
+              ...current,
+              [markers[markers.length - 1], newMarker],
+            ]);
+          }
         }
+        // Add new marker
+        setMarkers((current) => [...current, newMarker]);
+        // Reset focus after adding branch
+        setFocusIndex(null);
       }
     },
-    [markers]
+    [markers, focusIndex]
   );
 
   // Handle right-click on the map to show elevation info
@@ -81,6 +94,11 @@ const PipelineDesign: React.FC = () => {
     }
   }, []);
 
+  // Handle marker click to focus on the marker
+  const handleMarkerClick = (index: number) => {
+    setFocusIndex(index); // Set the clicked marker as the focus
+  };
+
   return (
     <div className="w-full">
       <LoadScript
@@ -95,8 +113,14 @@ const PipelineDesign: React.FC = () => {
           onRightClick={handleMapRightClick} // Handle right-click
         >
           {/* Render markers */}
-          <Marker position={markers[0]} />
-          <Marker position={markers[markers.length - 1]} />
+          {showMarker &&
+            markers.map((marker, index) => (
+              <Marker
+                key={index}
+                position={marker}
+                onClick={() => handleMarkerClick(index)} // Set marker as focus when clicked
+              />
+            ))}
 
           {/* Render polylines */}
           {polylines.map((path, index) => (
@@ -132,11 +156,14 @@ const PipelineDesign: React.FC = () => {
         </GoogleMap>
       </LoadScript>
 
-      <div className="mt-4 flex space-x-2">
-        {/* Undo Button */}
-        <Button onClick={() => {}} variant="default">
-          Save
-        </Button>
+      {/* Show Marker Button */}
+      <div className="flex items-center space-x-2 mt-4">
+        <Switch
+          checked={showMarker}
+          onCheckedChange={() => setShowMarker(!showMarker)}
+          id="show-marker"
+        />
+        <Label htmlFor="show-marker">Show Marker</Label>
       </div>
     </div>
   );
