@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { SidebarComponent } from "@/components/SidebarComponent";
 import { cn } from "@/lib/utils";
 
 const geistSans = localFont({
@@ -34,7 +33,6 @@ export default function RootLayout({
           `flex w-screen min-h-screen bg-neutral-100 dark:bg-neutral-800 text-black`
         )}
       >
-        <SidebarComponent />
         {children}
       </body>
     </html>
