@@ -1,3 +1,4 @@
+import { StartPlanning } from "@/components/StartPlanning";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,9 +24,7 @@ export default function Home() {
         </p>
       </div>
 
-      <Button asChild className="shadow-lg w-1/3">
-        <Link href="/">Start Planning</Link>
-      </Button>
+      <StartPlanning />
     </main>
   );
 }

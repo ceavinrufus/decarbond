@@ -27,8 +27,8 @@ export function SidebarComponent() {
       icon: <IconSolarPanel2 className="text-white h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Pipeline Design",
-      href: "/pipeline-design",
+      label: "Pipeline Route",
+      href: "/pipeline-route",
       icon: <IconMapPin2 className="text-white h-5 w-5 flex-shrink-0" />,
     },
   ];
