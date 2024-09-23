@@ -1,0 +1,65 @@
+import { FounderCard } from "@/components/FounderCard";
+import { StartPlanning } from "@/components/StartPlanning";
+import Image from "next/image";
+
+const founders = [
+  {
+    nama: "Adam Novaldino",
+    otobiografi:
+      "Adam is an Institut Teknologi Bandung student with four Ganesha Awards and multiple achievements in international competitions, primarily focused on energy-related themes. He has created innovative ideas, including emission reduction frameworks for private industry and low-emission technologies for fishermen. Adam also won a business competition award for translating research into commercial applications for companies like Grab Indonesia.",
+    imageUrl: "/adam.jpg",
+  },
+  {
+    nama: "Ceavin Rufus",
+    otobiografi:
+      "Ceavin Rufus is a motivated software engineer with a strong desire to learn and grow. He has a combination of academic knowledge and 2+ years of practical experience from both professional and freelance work.",
+    imageUrl: "/cepus.jpg",
+  },
+  {
+    nama: "Fachri Miskyatul",
+    otobiografi:
+      "Fachri has a strong background and interest in software development. He currently serves as the Head of the Service Information and Profession Division in the Petroleum Engineering Student Association at Institut Teknologi Bandung. Fachri led the development of an all-in-one website to meet the needs of petroleum engineering students at ITB and also developed a website for the 2024 Conference of Association of China Southeast Asia Microscopy.",
+    imageUrl: "/fachri.jpg",
+  },
+  {
+    nama: "Andrew Ringgas",
+    otobiografi:
+      "Ringgas is an Institut Teknologi Bandung student with deep interest in geospatial technology and CCUS. He won a paper competition for his research paper on the potential of GNSS implementation in CCUS. In his time as an intern at Pertamina Hulu Energy, he worked as a GIS analyst, focusing on surface and subsurface analysis for carbon injection. Ringgas also serves as the president of the Geodetic & Geomatic Student Association at Institut Teknologi Bandung.",
+    imageUrl: "/ringgas.jpg",
+  },
+];
+
+export default function Home() {
+  return (
+    <main className="p-6">
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col justify-center items-center mb-8 text-center">
+          <div className="relative h-24 w-96">
+            <Image src="/text-logo.png" alt="Decarbond" fill priority />
+          </div>
+          <p className="text-xl font-semibold my-5">
+            The Ultimate One-For-All{" "}
+            <span className="underline">Decarbonization Design</span> and{" "}
+            <span className="underline">Planning Software</span>
+          </p>
+          <p className="w-1/2">
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Eveniet ut
+            omnis exercitationem. Debitis, neque nobis, distinctio magni itaque
+            asperiores aperiam, cumque magnam rerum est ea error omnis impedit?
+            Dicta commodi quod sit ducimus quae optio voluptates ipsa esse
+            voluptatem officia.
+          </p>
+        </div>
+        <StartPlanning />
+      </div>
+      <div className="">
+        <h1 className="text-center text-3xl font-bold mb-10">Meet Our Team</h1>
+        <div className="flex justify-around">
+          {founders.map((founder) => (
+            <FounderCard founder={founder} />
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
