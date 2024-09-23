@@ -30,7 +30,7 @@ export default function RootLayout({
         className={cn(
           geistSans.variable,
           geistMono.variable,
-          `flex w-screen min-h-screen bg-neutral-100 text-black`
+          `flex w-screen min-h-screen overflow-x-hidden bg-neutral-100 text-black`
         )}
       >
         {children}
