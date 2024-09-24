@@ -19,10 +19,10 @@ const SolarPlanning: React.FC = () => {
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const [activePage, setActivePage] = useState<"input" | "design" | "result">("design");
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [solarPanel, setSolarPanel] = useState<google.maps.Polygon | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false); // Tambahkan state untuk mapLoaded
 
   const toggleTiles = () => {
-    if (mapRef.current) {
+    if (mapRef.current && mapLoaded) {
       const xyzTiles = new google.maps.ImageMapType({
         getTileUrl: (coord, zoom) => {
           if (zoom > 10) {
@@ -48,8 +48,8 @@ const SolarPlanning: React.FC = () => {
   const addSolarPanel = () => {
     if (mapRef.current) {
       const center = mapRef.current.getCenter();
-      const latOffset = 0.000018; // ~2 meter
-      const lngOffset = 0.000009; // ~1 meter
+      const latOffset = 0.000009; // ~2 meter
+      const lngOffset = 0.0000045; // ~1 meter
 
       const solarPanelCoords = [
         { lat: center.lat() - latOffset, lng: center.lng() - lngOffset },
@@ -63,7 +63,7 @@ const SolarPlanning: React.FC = () => {
         mapRef.current.setZoom(22);
       }
 
-      const panel = new google.maps.Polygon({
+      new google.maps.Polygon({
         paths: solarPanelCoords,
         strokeColor: "#FFD700",
         strokeOpacity: 0.8,
@@ -73,16 +73,15 @@ const SolarPlanning: React.FC = () => {
         draggable: true,
         map: mapRef.current,
       });
-
-      setSolarPanel(panel);
     }
   };
 
   const onLoad = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
+      setMapLoaded(true); // Set mapLoaded to true when the map is loaded
     },
-    [mapRef]
+    []
   );
 
   const toggleMapType = () => {
@@ -100,42 +99,40 @@ const SolarPlanning: React.FC = () => {
       </div>
 
       {activePage === "design" && (
-        <div className="relative w-full h-full">
-          <LoadScript
-            googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-          >
-            <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={center}
-              zoom={5}
-              onLoad={onLoad}
-              mapTypeId={mapType}
-            />
-          </LoadScript>
+        <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={5}
+            onLoad={onLoad}
+            mapTypeId={mapType}
+          />
+        </LoadScript>
+      )}
 
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
-            <Button 
-              onClick={toggleTiles} 
-              className="bg-white text-black rounded-full" 
-              title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
-            >
-              ☀️
-            </Button>
-            <Button 
-              onClick={addSolarPanel} 
-              className="bg-white text-black rounded-full" 
-              title="Add Solar Panel"
-            >
-              ➕
-            </Button>
-            <Button 
-              onClick={toggleMapType} 
-              className="bg-white text-black rounded-full" 
-              title={mapType === "roadmap" ? "Switch to Satellite" : "Switch to Road Map"}
-            >
-              {mapType === "roadmap" ? "🛰️" : "🗺️"}
-            </Button>
-          </div>
+      {activePage === "design" && (
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
+          <Button 
+            onClick={toggleTiles} 
+            className="bg-white text-black rounded-full" 
+            title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
+          >
+            ☀️
+          </Button>
+          <Button 
+            onClick={addSolarPanel} 
+            className="bg-white text-black rounded-full" 
+            title="Add Solar Panel"
+          >
+            ➕
+          </Button>
+          <Button 
+            onClick={toggleMapType} 
+            className="bg-white text-black rounded-full" 
+            title={mapType === "roadmap" ? "Switch to Satellite" : "Switch to Road Map"}
+          >
+            {mapType === "roadmap" ? "🛰️" : "🗺️"}
+          </Button>
         </div>
       )}
 
