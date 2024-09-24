@@ -32,7 +32,7 @@ const SolarPlanning: React.FC = () => {
           if (zoom > 10) {
             return "";
           }
-          return `/database/SolarHeatMap/${zoom}/${coord.x}/${coord.y}.png`;
+          return `/images/${zoom}/${coord.x}/${coord.y}.png`;
         },
         tileSize: new google.maps.Size(256, 256),
         maxZoom: 10,
