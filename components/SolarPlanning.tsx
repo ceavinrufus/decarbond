@@ -17,9 +17,13 @@ const center = {
 const SolarPlanning: React.FC = () => {
   const [tilesVisible, setTilesVisible] = useState(false);
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
-  const [activePage, setActivePage] = useState<"input" | "design" | "result">("design");
+  const [activePage, setActivePage] = useState<"input" | "design" | "result">(
+    "design"
+  );
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [solarPanel, setSolarPanel] = useState<google.maps.Polygon | null>(null);
+  const [solarPanel, setSolarPanel] = useState<google.maps.Polygon | null>(
+    null
+  );
 
   const toggleTiles = () => {
     if (mapRef.current) {
@@ -47,7 +51,9 @@ const SolarPlanning: React.FC = () => {
 
   const addSolarPanel = () => {
     if (mapRef.current) {
-      const center = mapRef.current.getCenter();
+      const center = mapRef.current?.getCenter();
+      if (!center) return;
+
       const latOffset = 0.000018; // ~2 meter
       const lngOffset = 0.000009; // ~1 meter
 
@@ -58,8 +64,10 @@ const SolarPlanning: React.FC = () => {
         { lat: center.lat() + latOffset, lng: center.lng() - lngOffset },
       ];
 
+      const zoom = mapRef.current.getZoom();
       // Cek zoom, jika kurang dari 18, ubah menjadi 22
-      if (mapRef.current.getZoom() < 18) {
+      if (!zoom) return;
+      if (zoom < 18) {
         mapRef.current.setZoom(22);
       }
 
@@ -86,11 +94,11 @@ const SolarPlanning: React.FC = () => {
   );
 
   const toggleMapType = () => {
-    setMapType(prev => (prev === "roadmap" ? "satellite" : "roadmap"));
+    setMapType((prev) => (prev === "roadmap" ? "satellite" : "roadmap"));
   };
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full">
       <div className="flex justify-center space-x-4 p-4 bg-gray-200">
         <Button onClick={() => setActivePage("input")}>Input</Button>
         <Button onClick={() => setActivePage("design")} className="font-bold">
@@ -114,24 +122,28 @@ const SolarPlanning: React.FC = () => {
           </LoadScript>
 
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
-            <Button 
-              onClick={toggleTiles} 
-              className="bg-white text-black rounded-full" 
+            <Button
+              onClick={toggleTiles}
+              className="bg-white text-black rounded-full"
               title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
             >
               ☀️
             </Button>
-            <Button 
-              onClick={addSolarPanel} 
-              className="bg-white text-black rounded-full" 
+            <Button
+              onClick={addSolarPanel}
+              className="bg-white text-black rounded-full"
               title="Add Solar Panel"
             >
               ➕
             </Button>
-            <Button 
-              onClick={toggleMapType} 
-              className="bg-white text-black rounded-full" 
-              title={mapType === "roadmap" ? "Switch to Satellite" : "Switch to Road Map"}
+            <Button
+              onClick={toggleMapType}
+              className="bg-white text-black rounded-full"
+              title={
+                mapType === "roadmap"
+                  ? "Switch to Satellite"
+                  : "Switch to Road Map"
+              }
             >
               {mapType === "roadmap" ? "🛰️" : "🗺️"}
             </Button>
