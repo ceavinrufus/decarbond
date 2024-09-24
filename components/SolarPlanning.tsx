@@ -21,13 +21,7 @@ const SolarPlanning: React.FC = () => {
     "design"
   );
   const mapRef = useRef<google.maps.Map | null>(null);
-<<<<<<< HEAD
   const [mapLoaded, setMapLoaded] = useState(false); // Tambahkan state untuk mapLoaded
-=======
-  const [solarPanel, setSolarPanel] = useState<google.maps.Polygon | null>(
-    null
-  );
->>>>>>> be13aef514557db11807d86f5c9fa7865f8ae1c6
 
   const toggleTiles = () => {
     if (mapRef.current && mapLoaded) {
