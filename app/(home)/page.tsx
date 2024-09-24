@@ -5,7 +5,7 @@ const founders = [
   {
     nama: "Adam Novaldino",
     otobiografi:
-      "Adam is an Institut Teknologi Bandung student with four Ganesha Awards and multiple achievements in international competitions, primarily focused on energy-related themes. He has created innovative ideas, including emission reduction frameworks for private industry and low-emission technologies for fishermen. Adam also won a business competition award for translating research into commercial applications for companies like Grab Indonesia.",
+      "Adam, an ITB student with multiple awards, has focused on energy-related research. He's created innovative ideas for emission reduction and low-emission technologies, winning awards for his work, including a business competition prize for translating research into commercial applications.",
     imageUrl: "/adam.jpg",
   },
   {
@@ -17,20 +17,20 @@ const founders = [
   {
     nama: "Fachri Miskyatul",
     otobiografi:
-      "Fachri has a strong background and interest in software development. He currently serves as the Head of the Service Information and Profession Division in the Petroleum Engineering Student Association at Institut Teknologi Bandung. Fachri led the development of an all-in-one website to meet the needs of petroleum engineering students at ITB and also developed a website for the 2024 Conference of Association of China Southeast Asia Microscopy.",
+      "Fachri is a software developer and the head of the Service Information and Profession Division at ITB's Petroleum Engineering Student Association. He led the development of an all-in-one website for petroleum engineering students and a website for the 2024 Conference of Association of China Southeast Asia Microscopy.",
     imageUrl: "/fachri.jpg",
   },
   {
     nama: "Andrew Ringgas",
     otobiografi:
-      "Ringgas is an Institut Teknologi Bandung student with deep interest in geospatial technology and CCUS. He won a paper competition for his research paper on the potential of GNSS implementation in CCUS. In his time as an intern at Pertamina Hulu Energy, he worked as a GIS analyst, focusing on surface and subsurface analysis for carbon injection. Ringgas also serves as the president of the Geodetic & Geomatic Student Association at Institut Teknologi Bandung.",
+      "Ringgas, an ITB student interested in geospatial technology and CCUS, won a paper competition for his research on using GNSS in CCUS. As a GIS analyst at Pertamina Hulu Energy, he focused on surface and subsurface analysis for carbon injection. He's also the president of the Geodetic & Geomatic Student Association at ITB.",
     imageUrl: "/ringgas.jpg",
   },
 ];
 
 export default function Home() {
   return (
-    <main className="p-6">
+    <main className="p-6 max-w-7xl">
       <Hero />
       <div className="">
         <h1 className="text-center text-3xl font-bold mb-10">Meet Our Team</h1>

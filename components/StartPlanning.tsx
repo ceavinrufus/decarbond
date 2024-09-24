@@ -11,7 +11,7 @@ export function StartPlanning() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button className="shadow-lg ">Start Planning</Button>
+        <Button className="shadow-lg w-fit">Start Planning</Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 flex gap-3 flex-col">
         <Label>Choose a Planning Tool</Label>

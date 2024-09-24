@@ -4,8 +4,8 @@ import { StartPlanning } from "@/components/StartPlanning";
 
 const Hero = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="flex flex-col justify-center items-center mb-8 text-center">
+    <div className="flex flex-col justify-center h-screen">
+      <div className="flex flex-col justify- items-start mb-8">
         <div className="relative h-24 w-96">
           <Image src="/text-logo.png" alt="Decarbond" fill priority />
         </div>
