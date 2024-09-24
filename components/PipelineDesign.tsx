@@ -166,6 +166,14 @@ const PipelineDesign: React.FC = () => {
     calculateLandUse(); // Recalculate land use when pipe length or buffer width changes
   }, [pipeLength, bufferWidth]);
 
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="w-full">
       <LoadScript
@@ -245,7 +253,7 @@ const PipelineDesign: React.FC = () => {
               <div className="mt-4">
                 <h3 className="text-lg font-bold underline">Summary</h3>
                 <p>Pipe Length: {pipeLength.toFixed(2)} km</p>
-                <p>Total Cost: Rp {calculateCosts().toFixed(2)}</p>
+                <p>Total Cost: {formatRupiah(calculateCosts())}</p>
               </div>
 
               <div className="mt-4">
@@ -257,21 +265,20 @@ const PipelineDesign: React.FC = () => {
 
               <div className="mt-4">
                 <h3 className="text-lg font-bold underline">Cost Detail</h3>
-                <p>Material Cost: Rp{(pipeLength * materialCost).toFixed(2)}</p>
+                <p>Material Cost: {formatRupiah(pipeLength * materialCost)}</p>
                 <p>
-                  Construction Cost: Rp
-                  {(pipeLength * constructionCost).toFixed(2)}
+                  Construction Cost:{" "}
+                  {formatRupiah(pipeLength * constructionCost)}
                 </p>
                 <p>
-                  Land Use Cost: Rp
-                  {(landUseArea * landUseCostPerCubicMeter).toFixed(2)}
+                  Land Use Cost:{" "}
+                  {formatRupiah(landUseArea * landUseCostPerCubicMeter)}
                 </p>
                 <p>
-                  Total Cost: Rp
-                  {(
-                    calculateCosts() -
-                    landUseArea * landUseCostPerCubicMeter
-                  ).toFixed(2)}
+                  Total Cost:{" "}
+                  {formatRupiah(
+                    calculateCosts() - landUseArea * landUseCostPerCubicMeter
+                  )}
                 </p>
               </div>
 
