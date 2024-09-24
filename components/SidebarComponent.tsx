@@ -2,12 +2,15 @@
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "./ui/sidebar";
 import {
-  IconArrowLeft,
   IconBrandTabler,
-  IconSettings,
-  IconUserBolt,
   IconSolarPanel2,
   IconMapPin2,
+  IconWind,
+  IconWavesElectricity,
+  IconWaveSquare,
+  IconTree,
+  IconBuildingFactory,
+  IconHomeBolt,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -17,7 +20,7 @@ import { cn } from "@/lib/utils";
 export function SidebarComponent() {
   const links = [
     {
-      label: "Dashboard",
+      label: "Home",
       href: "/",
       icon: <IconBrandTabler className="text-white h-5 w-5 flex-shrink-0" />,
     },
@@ -30,6 +33,40 @@ export function SidebarComponent() {
       label: "Pipeline Route",
       href: "/pipeline-route",
       icon: <IconMapPin2 className="text-white h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Wind Planning",
+      href: "/wind-planning",
+      icon: <IconWind className="text-white h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Hydro Planning",
+      href: "/hydro-planning",
+      icon: (
+        <IconWavesElectricity className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Geothermal Planning",
+      href: "/geothermal-planning",
+      icon: <IconWaveSquare className="text-white h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Forestation Planning",
+      href: "/forestation-planning",
+      icon: <IconTree className="text-white h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Smart Grid",
+      href: "/smart-grid",
+      icon: <IconHomeBolt className="text-white h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Emission Tracking and Monitoring",
+      href: "/emission",
+      icon: (
+        <IconBuildingFactory className="text-white h-5 w-5 flex-shrink-0" />
+      ),
     },
   ];
   const [open, setOpen] = useState(false);

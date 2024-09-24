@@ -17,9 +17,17 @@ const center = {
 const SolarPlanning: React.FC = () => {
   const [tilesVisible, setTilesVisible] = useState(false);
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
-  const [activePage, setActivePage] = useState<"input" | "design" | "result">("design");
+  const [activePage, setActivePage] = useState<"input" | "design" | "result">(
+    "design"
+  );
   const mapRef = useRef<google.maps.Map | null>(null);
+<<<<<<< HEAD
   const [mapLoaded, setMapLoaded] = useState(false); // Tambahkan state untuk mapLoaded
+=======
+  const [solarPanel, setSolarPanel] = useState<google.maps.Polygon | null>(
+    null
+  );
+>>>>>>> be13aef514557db11807d86f5c9fa7865f8ae1c6
 
   const toggleTiles = () => {
     if (mapRef.current && mapLoaded) {
@@ -28,7 +36,7 @@ const SolarPlanning: React.FC = () => {
           if (zoom > 10) {
             return "";
           }
-          return `/database/SolarHeatMap/${zoom}/${coord.x}/${coord.y}.png`;
+          return `/images/${zoom}/${coord.x}/${coord.y}.png`;
         },
         tileSize: new google.maps.Size(256, 256),
         maxZoom: 10,
@@ -47,9 +55,17 @@ const SolarPlanning: React.FC = () => {
 
   const addSolarPanel = () => {
     if (mapRef.current) {
+<<<<<<< HEAD
       const center = mapRef.current.getCenter();
       const latOffset = 0.000009; // ~2 meter
       const lngOffset = 0.0000045; // ~1 meter
+=======
+      const center = mapRef.current?.getCenter();
+      if (!center) return;
+
+      const latOffset = 0.000018; // ~2 meter
+      const lngOffset = 0.000009; // ~1 meter
+>>>>>>> be13aef514557db11807d86f5c9fa7865f8ae1c6
 
       const solarPanelCoords = [
         { lat: center.lat() - latOffset, lng: center.lng() - lngOffset },
@@ -58,8 +74,10 @@ const SolarPlanning: React.FC = () => {
         { lat: center.lat() + latOffset, lng: center.lng() - lngOffset },
       ];
 
+      const zoom = mapRef.current.getZoom();
       // Cek zoom, jika kurang dari 18, ubah menjadi 22
-      if (mapRef.current.getZoom() < 18) {
+      if (!zoom) return;
+      if (zoom < 18) {
         mapRef.current.setZoom(22);
       }
 
@@ -85,11 +103,11 @@ const SolarPlanning: React.FC = () => {
   );
 
   const toggleMapType = () => {
-    setMapType(prev => (prev === "roadmap" ? "satellite" : "roadmap"));
+    setMapType((prev) => (prev === "roadmap" ? "satellite" : "roadmap"));
   };
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full">
       <div className="flex justify-center space-x-4 p-4 bg-gray-200">
         <Button onClick={() => setActivePage("input")}>Input</Button>
         <Button onClick={() => setActivePage("design")} className="font-bold">
@@ -110,6 +128,7 @@ const SolarPlanning: React.FC = () => {
         </LoadScript>
       )}
 
+<<<<<<< HEAD
       {activePage === "design" && (
         <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
           <Button 
@@ -133,6 +152,35 @@ const SolarPlanning: React.FC = () => {
           >
             {mapType === "roadmap" ? "🛰️" : "🗺️"}
           </Button>
+=======
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
+            <Button
+              onClick={toggleTiles}
+              className="bg-white text-black rounded-full"
+              title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
+            >
+              ☀️
+            </Button>
+            <Button
+              onClick={addSolarPanel}
+              className="bg-white text-black rounded-full"
+              title="Add Solar Panel"
+            >
+              ➕
+            </Button>
+            <Button
+              onClick={toggleMapType}
+              className="bg-white text-black rounded-full"
+              title={
+                mapType === "roadmap"
+                  ? "Switch to Satellite"
+                  : "Switch to Road Map"
+              }
+            >
+              {mapType === "roadmap" ? "🛰️" : "🗺️"}
+            </Button>
+          </div>
+>>>>>>> be13aef514557db11807d86f5c9fa7865f8ae1c6
         </div>
       )}
 
