@@ -107,61 +107,67 @@ const SolarPlanning: React.FC = () => {
         <Button onClick={() => setActivePage("result")}>Result</Button>
       </div>
 
-      {activePage === "design" && (
-        <div className="relative w-full h-full">
-          <LoadScript
-            googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+      <div
+        className={`relative w-full h-full ${
+          activePage !== "design" ? "hidden" : ""
+        }`}
+      >
+        <LoadScript
+          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+        >
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={5}
+            onLoad={onLoad}
+            mapTypeId={mapType}
+          />
+        </LoadScript>
+
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
+          <Button
+            onClick={toggleTiles}
+            className="bg-white text-black rounded-full"
+            title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
           >
-            <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={center}
-              zoom={5}
-              onLoad={onLoad}
-              mapTypeId={mapType}
-            />
-          </LoadScript>
-
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
-            <Button
-              onClick={toggleTiles}
-              className="bg-white text-black rounded-full"
-              title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
-            >
-              ☀️
-            </Button>
-            <Button
-              onClick={addSolarPanel}
-              className="bg-white text-black rounded-full"
-              title="Add Solar Panel"
-            >
-              ➕
-            </Button>
-            <Button
-              onClick={toggleMapType}
-              className="bg-white text-black rounded-full"
-              title={
-                mapType === "roadmap"
-                  ? "Switch to Satellite"
-                  : "Switch to Road Map"
-              }
-            >
-              {mapType === "roadmap" ? "🛰️" : "🗺️"}
-            </Button>
-          </div>
+            ☀️
+          </Button>
+          <Button
+            onClick={addSolarPanel}
+            className="bg-white text-black rounded-full"
+            title="Add Solar Panel"
+          >
+            ➕
+          </Button>
+          <Button
+            onClick={toggleMapType}
+            className="bg-white text-black rounded-full"
+            title={
+              mapType === "roadmap"
+                ? "Switch to Satellite"
+                : "Switch to Road Map"
+            }
+          >
+            {mapType === "roadmap" ? "🛰️" : "🗺️"}
+          </Button>
         </div>
-      )}
+      </div>
 
-      {activePage === "input" && (
-        <div className="flex items-center justify-center h-full">
-          <h1 className="text-3xl">Input</h1>
-        </div>
-      )}
+      <div
+        className={`flex items-center justify-center h-full ${
+          activePage !== "input" ? "hidden" : ""
+        }`}
+      >
+        <h1 className="text-3xl">Input</h1>
+      </div>
 
-      {activePage === "result" && (
-        <div className="flex items-center justify-center h-full">
-          <h1 className="text-3xl">Result</h1>
-        </div>
-      )}
+      <div
+        className={`flex items-center justify-center h-full ${
+          activePage !== "result" ? "hidden" : ""
+        }`}
+      >
+        <h1 className="text-3xl">Result</h1>
+      </div>
     </div>
   );
 };
