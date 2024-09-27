@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
+import Chart from "./Chart";
 
 const containerStyle = {
   width: "100%",
@@ -166,7 +167,7 @@ const SolarPlanning: React.FC = () => {
           activePage !== "result" ? "hidden" : ""
         }`}
       >
-        <h1 className="text-3xl">Result</h1>
+        <Chart />
       </div>
     </div>
   );
