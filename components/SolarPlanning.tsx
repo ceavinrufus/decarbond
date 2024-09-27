@@ -100,7 +100,7 @@ const SolarPlanning: React.FC = () => {
       solarPanel.current.push(newRectangle); // Push new rectangle into the array
 
       // Add an event listener on the rectangle.
-      newRectangle.addListener("bounds_changed", () => showNewRect(newRectangle));
+      google.maps.event.addListener(mapRef.current,"idle", () => showNewRect(newRectangle));
       // Define an info window on the map.
       infoWindow = new google.maps.InfoWindow();
     }
@@ -262,6 +262,7 @@ const SolarPlanning: React.FC = () => {
           activePage !== "result" ? "hidden" : ""
         }`}
       >
+        
         <div className="p-4 mt-4 bg-white shadow-lg rounded-lg">
           <h2 className="text-2xl font-bold mb-2">Calculation Results</h2>
           <p dangerouslySetInnerHTML={{ __html: resultData }} />
