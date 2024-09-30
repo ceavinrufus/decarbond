@@ -21,7 +21,11 @@ ChartJS.register(
   Legend
 );
 
-const Chart: React.FC = () => {
+interface ChartProps {
+  datas: number[];
+}
+
+const Chart: React.FC<ChartProps> = ({ datas }) => {
   const data = {
     labels: [
       "Januari",
