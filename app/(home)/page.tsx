@@ -1,4 +1,5 @@
 import { FounderCard } from "@/components/FounderCard";
+import GaugeChart from "@/components/GaugeChart";
 import Hero from "@/components/Hero";
 
 const founders = [
