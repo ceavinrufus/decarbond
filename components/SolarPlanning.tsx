@@ -3,7 +3,58 @@
 import React, { useState, useCallback, useRef } from "react";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
-import Chart from "./Chart";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+// Constants
+const defaultElectricityPrice = 1444.7;
+const co2PerKWh = 0.85; // kg CO2 per kWh green energy
+const kgCO2PerTree = 22; // kg CO2 absorbed by a tree annually
+const monthlyPercentages = [7.8, 7.5, 8.5, 8.7, 8.9, 8.9, 9.0, 9.1, 8.9, 8.7, 7.8, 7.2];
+
+// Chart.js registration
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Chart Display Function
+const renderChart = (chartType: string, chartData: any) => {
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "top" as const },
+      title: { display: true, text: `${chartType}` },
+    },
+  };
+  return (
+    <div className="w-full max-h-[75vh] h-full p-4 min-h-60">
+      <Bar data={chartData} options={options} />
+    </div>
+  );
+};
+
+// Sample chart data for all charts
+const generateData = (label: string, percentages: number[], totalValue: number) => {
+  const monthlyValues = percentages.map((percentage) => Math.round((totalValue * percentage) / 100));
+  return {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    datasets: [
+      {
+        label,
+        data: monthlyValues,
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+};
 
 const containerStyle = {
   width: "100%",
@@ -16,17 +67,49 @@ const center = {
 };
 
 const SolarPlanning: React.FC = () => {
+  interface ResultData {
+    installationSize: number;
+    averagePotential: number;
+    installationCost: number;
+    potential:number[];
+    treesNeeded: number;
+    greenEnergy: number;
+    co2Saved: number;
+    solarProduction: number;
+    savings: number;
+    energyCoverage: number;
+    batteryStorageAh:number;
+    neededEnergy:number;
+  }
   const [tilesVisible, setTilesVisible] = useState(false);
+  const [lastRectangleBounds, setLastRectangleBounds] = useState<google.maps.LatLngBounds | null>(null);
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const [activePage, setActivePage] = useState<"input" | "design" | "result">(
-    "design"
+    "input"
   );
   const [energyType, setEnergyType] = useState("Annual"); // Dropdown state
   const [energyConsumption, setEnergyConsumption] = useState<any>({ annual: '', monthly: Array(12).fill('') });
+  const [electricityPrice, setElectricityPrice] = useState(defaultElectricityPrice);
+  const [resultData, setResultData] = useState({
+    installationSize: 0,
+    averagePotential: 0,
+    potential:[0,0,0,0,0,0,0,0,0,0,0,0],
+    installationCost: 0,
+    treesNeeded: 0,
+    greenEnergy: 0,
+    co2Saved: 0,
+    solarProduction: 0,
+    savings: 0,
+    energyCoverage: 0,
+    batteryStorageAh: 0,  // Default to 0
+    neededEnergy: 0,      // Default to 0
+  });
+  
   const mapRef = useRef<google.maps.Map | null>(null);
   const solarPanel = useRef<google.maps.Rectangle[]>([]); // Use ref to store solarPanel array
+  
   let infoWindow: google.maps.InfoWindow | undefined;
-  const [resultData, setResultData] = useState<string>(""); // Store result data here
+ 	
   var contentString="";
   
   const handleEnergyTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -68,80 +151,135 @@ const SolarPlanning: React.FC = () => {
 
   const addSolarPanel = () => {
     if (mapRef.current) {
-      const center = mapRef.current?.getCenter();
-      if (!center) return;
-      const spCount = solarPanel.current.length;
-      const latOffset = 0.000018; // ~2 meter
-      const lngOffset = 0.000009; // ~1 meter
+        const bounds = lastRectangleBounds; 
+        const center = mapRef.current?.getCenter();
+        if (!center) return;
 
-      const solarPanelCoords = {
-        north: center.lat() + latOffset,
-        south: center.lat() - latOffset,
-        east: center.lng() + lngOffset,
-        west: center.lng() - lngOffset,
-      };
+        const spCount = solarPanel.current.length;
+        const latOffset = 0.000018; // ~2 meter
+        const lngOffset = 0.000009; // ~1 meter
 
-      const zoom = mapRef.current.getZoom();
-      // Cek zoom, jika kurang dari 18, ubah menjadi 22
-      if (!zoom) return;
-      if (zoom < 18) {
-        mapRef.current.setZoom(22);
-      }
+        let solarPanelCoords;
+        var newNorthEast;
+        var newSouthWest;
+        if (bounds) {
+            // Jika ada bounds sebelumnya, hitung posisi rectangle baru di sebelah kanan
+            newNorthEast = new google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+0.000019);
+            newSouthWest = new google.maps.LatLng(bounds.getSouthWest().lat(), bounds.getSouthWest().lng()+0.000019);
+            
+            // Set solarPanelCoords menggunakan posisi rectangle baru
+            solarPanelCoords = {
+                north: newNorthEast.lat()+ latOffset,
+                south: newSouthWest.lat()- latOffset,
+                east: newNorthEast.lng() +lngOffset,
+                west: newSouthWest.lng() -lngOffset,
+            };
+        } else {
+          newNorthEast = new google.maps.LatLng(center.lat(), center.lng());
+          newSouthWest = new google.maps.LatLng(center.lat(), center.lng());
+            // Jika tidak ada bounds, gunakan posisi tengah peta
+            solarPanelCoords = {
+                north: center.lat() + latOffset,
+                south: center.lat() - latOffset,
+                east: center.lng() + lngOffset,
+                west: center.lng() - lngOffset,
+            };
+        }
 
-      // Define the rectangle and set its editable property to true.
-      const newRectangle = new google.maps.Rectangle({
-        bounds: solarPanelCoords,
-        editable: false,
-        draggable: true,
-        strokeColor: "#0000FF",  
-        fillColor: "#0000FF",   
-      });
-      newRectangle.setMap(mapRef.current);
-      solarPanel.current.push(newRectangle); // Push new rectangle into the array
+        const zoom = mapRef.current.getZoom();
+        if (!zoom) return;
+        if (zoom < 18) {
+            mapRef.current.setZoom(22);
+        }
 
-      // Add an event listener on the rectangle.
-      google.maps.event.addListener(mapRef.current,"idle", () => showNewRect(newRectangle));
-      // Define an info window on the map.
-      infoWindow = new google.maps.InfoWindow();
+       var newRectangle = new google.maps.Rectangle({
+            bounds: solarPanelCoords,
+            editable: false,
+            draggable: true,
+            strokeColor: "#0000FF",  
+            fillColor: "#0000FF",   
+        });
+        newRectangle.setMap(mapRef.current);
+        solarPanel.current.push(newRectangle); // Push new rectangle into the array
+        newRectangle.addListener("bounds_changed", () => boundChangeEvent(newRectangle));
+        // Add event listener for double-click to remove rectangle
+        newRectangle.addListener("dblclick", () => {
+          newRectangle.setMap(null); // Remove from the map
+          solarPanel.current = solarPanel.current.filter(rect => rect !== newRectangle); // Remove from the array
+         });
+        // Add an event listener on the rectangle.
+        google.maps.event.addListener(mapRef.current, "idle", () => showNewRect(newRectangle));
+        // Define an info window on the map.
+        infoWindow = new google.maps.InfoWindow();
+
+        // Update lastRectangleBounds with the new rectangle's bounds
+        setLastRectangleBounds(new google.maps.LatLngBounds(newSouthWest, newNorthEast));
     }
   };
-
+  function boundChangeEvent(rectangle:google.maps.Rectangle) {
+    const bounds = rectangle.getBounds(); 
+    if (bounds){
+      const newNorthEast = new google.maps.LatLng(bounds.getNorthEast().lat()-0.000018, bounds.getNorthEast().lng()-0.000009);
+      const newSouthWest = new google.maps.LatLng(bounds.getSouthWest().lat()+0.000018, bounds.getSouthWest().lng()+0.000009);
+      setLastRectangleBounds(new google.maps.LatLngBounds(newSouthWest, newNorthEast));
+    }
+  }
+  const handleElectricityPriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setElectricityPrice(parseFloat(event.target.value));
+  };
   async function showNewRect(sp: google.maps.Rectangle) {
     const ne = sp.getBounds()?.getNorthEast();
     const sw = sp.getBounds()?.getSouthWest();
     if (!ne || !sw || !mapRef.current) return;
-    
+  
     const centerLat = (ne.lat() + sw.lat()) / 2;
     const centerLng = (ne.lng() + sw.lng()) / 2;
     const url = `https://api.globalsolaratlas.info/data/lta?loc=${centerLat},${centerLng}`;
   
     await fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        const pvout = data.annual.data.PVOUT_csi;
-  
+      .then((response) => response.json())
+      .then((data) => {
+        const pvout_all = data.monthly.data.PVOUT_csi;
+        const pvout_avg = pvout_all.reduce((accumulator:number, currentValue:number) => accumulator + currentValue, 0) / pvout_all.length;
         const panelCapacity = 350; // Watts
         const panelCount = solarPanel.current.length;
         const installationSize = (panelCount * panelCapacity) / 1000; // kWp
         const installationCost = panelCount * 1700000; // Assuming 1.7M IDR per panel
   
-        const yearlySolarProduction = pvout * installationSize; // kWh/year
+        const yearlySolarProduction = pvout_avg * installationSize; // kWh/year
   
-        contentString =
-          "<b>PVOUT</b><br>" +
-          "Latitude: " + centerLat +
-          "<br>Longitude: " + centerLng +
-          "<br>Potential: " + pvout + " kWh/kWp" +
-          "<br>Installation Size: " + installationSize + " kWp" +
-          "<br>Installation Cost: Rp " + installationCost.toLocaleString() +
-          "<br>Yearly Solar Production: " + yearlySolarProduction + " kWh";
-        setResultData(contentString); // Store the content string in resultData state
-
+        // Calculations
+        const kgCO2 = yearlySolarProduction * co2PerKWh; // kg CO2 saved
+        const treesNeeded = kgCO2 / kgCO2PerTree; // Equivalent number of trees
+        const savings = yearlySolarProduction * electricityPrice; // Savings in Rp/year
+        const energyCoverage = yearlySolarProduction / energyConsumption.annual; // Green energy coverage
+        let neededEnergy = 0;
+        let batteryStorageAh = 0;
+        if (energyCoverage < 1) {
+          neededEnergy = energyConsumption.annual - yearlySolarProduction;
+        } else {
+          // Recommendation for battery storage (simplified assumption)
+          batteryStorageAh = (yearlySolarProduction * 1000) / (48 * 365); // Assume 48V system
+        }
+        // Set the result data
+        setResultData({
+          installationSize: Number(installationSize.toFixed(2)),
+          averagePotential: Number(pvout_avg.toFixed(2)),
+          installationCost,
+          treesNeeded: Number(treesNeeded.toFixed(2)),
+          potential:pvout_all,
+          greenEnergy: Number(yearlySolarProduction.toFixed(2)),
+          co2Saved: Number(kgCO2.toFixed(2)),
+          solarProduction: Number(yearlySolarProduction.toFixed(2)),
+          savings: Number(savings.toFixed(2)),
+          energyCoverage: Number((energyCoverage * 100).toFixed(2)),
+          batteryStorageAh: Number(batteryStorageAh.toFixed(2)) || 0,  // Default to 0 if undefined
+          neededEnergy: Number(neededEnergy.toFixed(2)) || 0,          // Default to 0 if undefined
+        });
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching data:", error);
       });
-
   }
   
 
@@ -155,10 +293,46 @@ const SolarPlanning: React.FC = () => {
   const toggleMapType = () => {
     setMapType((prev) => (prev === "roadmap" ? "satellite" : "roadmap"));
   };
-
+  // Chart data definitions
+  const chartData1 = generateData("Electricity Usage (kWh)", monthlyPercentages, energyConsumption.annual);
+  const chartData2 = {
+    labels: chartData1.labels,
+    datasets: [
+      {
+        label: "Excess/Under Energy (kWh)",
+        data: resultData?.potential,
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+      },
+    ],
+  };
+  const excessUnderData = chartData2.datasets[0].data.map((value, index) => value - chartData1.datasets[0].data[index]);
+  const chartData3 = {
+    ...chartData1,
+    datasets: [
+      chartData1.datasets[0],
+      {
+        label: "Solar Production (kWh)",
+        data: chartData2.datasets[0].data,
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+      },
+    ],
+  };
+  const chartData4 = {
+    labels: chartData1.labels,
+    datasets: [
+      {
+        label: "Excess/Under Energy (kWh)",
+        data: excessUnderData,
+        backgroundColor: excessUnderData.map((val) => (val > 0 ? "blue" : "red")),
+      },
+    ],
+  };
+  
   return (
     <div className="relative w-full">
-      <div className="flex justify-center space-x-4 p-4 bg-gray-200">
+      <div className="flex justify-center space-x-4 p-2 bg-gray-200">
         <Button onClick={() => setActivePage("input")}>Input</Button>
         <Button onClick={() => setActivePage("design")} className="font-bold">
           Design
@@ -218,56 +392,125 @@ const SolarPlanning: React.FC = () => {
         }`}
       >
         <div className={`flex flex-col items-center justify-center h-full ${activePage !== "input" ? "hidden" : ""}`}>
-        <h1 className="text-3xl">Input</h1>
+        <h1 className="text-3xl mt-8">Input</h1>
 
-        <div className="mt-4">
-          <label className="mr-4">Energy Consumption Type:</label>
-          <select value={energyType} onChange={handleEnergyTypeChange} className="border p-2">
+        <div className="input-section mt-8">
+          <label>Energy Consumption Type: </label>
+          <select value={energyType} onChange={handleEnergyTypeChange}>
             <option value="Annual">Annual</option>
             <option value="Monthly">Monthly</option>
           </select>
-        </div>
-
-        {/* Display input based on selection */}
-        {energyType === "Annual" ? (
-          <div className="mt-4">
-            <label>Annual Energy Consumption (kWh/year):</label>
-            <input
-              type="number"
-              value={energyConsumption.annual}
-              onChange={(e) => handleEnergyInputChange(0, e.target.value)}
-              className="border p-2 ml-2"
-            />
-          </div>
-        ) : (
-          <div className="mt-4">
-            {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((month, index) => (
-              <div key={index} className="mt-2">
-                <label>{month} Energy Consumption (kWh):</label>
+          {energyType === "Annual" && (
+            <div className="mt-4">
+              <label>Annual Energy Consumption (kWh):</label>
+              <input
+                type="number"
+                value={energyConsumption.annual}
+                onChange={(e) => handleEnergyInputChange(0, e.target.value)}
+                className="border p-2 ml-2"
+              />
+            </div>
+          )}
+          {energyType === "Monthly" &&
+            energyConsumption.monthly.map((value: string, index: number) => (
+              <div className="mt-4" key={index}>
+                <label>{`Month ${index + 1}:`}</label>
                 <input
                   type="number"
-                  value={energyConsumption.monthly[index]}
+                  value={value}
                   onChange={(e) => handleEnergyInputChange(index, e.target.value)}
                   className="border p-2 ml-2"
                 />
               </div>
             ))}
+
+          <div className="mt-4">
+            <label>Electricity Price (Rp/kWh):</label>
+            <input
+              type="number"
+              value={electricityPrice}
+              onChange={handleElectricityPriceChange}
+              className="border p-2 ml-2"
+            />
           </div>
-        )}
+        </div>
       </div>
       </div>
 
-      <div
-        className={`flex items-center justify-center h-full ${
-          activePage !== "result" ? "hidden" : ""
-        }`}
-      >
-        
-        <div className="p-4 mt-4 bg-white shadow-lg rounded-lg">
-          <h2 className="text-2xl font-bold mb-2">Calculation Results</h2>
-          <p dangerouslySetInnerHTML={{ __html: resultData }} />
+      <div className={`flex justify-center h-full ${activePage !== "result" ? "hidden" : ""}`}>
+        <div className="p-4 mt-4 rounded-lg w-full max-w-4xl">
+        <h2 className="text-2xl font-bold mb-2">Summary</h2>
+        <div>
+          <p>Installation Size : {resultData?.installationSize} kWp</p>
+          <p className="mb-4">Average Potential : {resultData?.averagePotential} kWh/kWp</p>
+          <p className="mb-4">Cost : Rp{resultData?.installationCost}</p>
+          <div className="flex justify-around">
+            {/* Gambar 1 - Pohon */}
+            <div className="text-center">
+              <img src="/images/logo/tree.png" alt="Tree" className="h-20 w-20 mx-auto" />
+              <p className="mt-2"><b>Equal {resultData?.treesNeeded}</b> <br></br>Tree Carbon Absorption</p>
+            </div>
+
+            {/* Gambar 2 - Energi Hijau */}
+            <div className="text-center">
+              <img src="/images/logo/green_energy.png" alt="Green Energy" className="h-20 w-20 mx-auto" />
+              <p className="mt-2"><b>{resultData?.greenEnergy} kWh</b> <br></br>Green Energy</p>
+            </div>
+
+            {/* Gambar 3 - CO2 */}
+            <div className="text-center">
+              <img src="/images/logo/co2.png" alt="CO2" className="h-20 w-20 mx-auto" />
+              <p className="mt-2"><b>{resultData?.co2Saved} Kg</b> <br></br>CO2 Avoided</p>
+            </div>
+          </div>
         </div>
+
+        {/* Bagian Energi */}
+        <h2 className="text-2xl font-bold mb-2 mt-8">Energy</h2>
+        <div className="flex justify-between">
+          <div>
+            <p>Solar Production Annually : {resultData?.solarProduction} kWh</p>
+            <p>Saving Annually : Rp{resultData?.savings}</p>
+            <p>Green Energy Coverage : {resultData?.energyCoverage}%</p>
+          </div>
+        </div>
+
+
+          {/* Additional / Lacking Power */}
+          <h2 className="text-2xl font-bold mb-2 mt-8">Additional / Lacking Power</h2>
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center">
+        <img src="/images/logo/battery.png" alt="Battery" className="h-16 w-16 mr-4" />
+        <p>
+          {resultData?.batteryStorageAh > 0
+            ? `Recomended Battery Storage : ${resultData?.batteryStorageAh} Ah`
+            : "No battery storage needed"}
+        </p>
       </div>
+      <div className="flex items-center">
+        <img src="/images/logo/energy.png" alt="Energy" className="h-16 w-16 mr-4" />
+        <p>
+          {resultData?.neededEnergy > 0
+            ? `You will still need to buy ${resultData?.neededEnergy} kWh energy`
+            : "No additional energy required"}
+        </p>
+      </div>
+    </div>
+
+          
+        </div>
+
+        <div className="p-6 w-full max-w-2xl mt-8 flex flex-col space-y-4 overflow-y-auto max-h-[40rem]">
+          {renderChart("Electricity Usage", chartData1)}
+          {renderChart("Solar Production", chartData2)}
+          {renderChart("Electricity Combination", chartData3)}
+          {renderChart("Excess/Under Energy", chartData4)}
+        </div>
+
+
+      </div>
+
+
     </div>
   );
 };
