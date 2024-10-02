@@ -249,6 +249,7 @@ const SolarPlanning: React.FC = () => {
         const installationCost = panelCount * 1700000; // Assuming 1.7M IDR per panel
         const optimumTilt = data.annual.data.OPTA;
         const yearlySolarProduction = pvout_avg * installationSize; // kWh/year
+        const pvout_multiplied = pvout_all.map((value: number) => value * installationSize);
   
         // Calculations
         const kgCO2 = yearlySolarProduction * co2PerKWh; // kg CO2 saved
@@ -269,7 +270,7 @@ const SolarPlanning: React.FC = () => {
           averagePotential: Number((pvout_avg).toFixed(2)),
           installationCost,
           treesNeeded: Number(treesNeeded.toFixed(2)),
-          potential:pvout_all,
+          potential:pvout_multiplied,
           optimumTilt,
           greenEnergy: Number(yearlySolarProduction.toFixed(2)),
           co2Saved: Number(kgCO2.toFixed(2)),
@@ -279,6 +280,56 @@ const SolarPlanning: React.FC = () => {
           batteryStorageAh: Number(batteryStorageAh.toFixed(2)) || 0,  // Default to 0 if undefined
           neededEnergy: Number(neededEnergy.toFixed(2)) || 0,          // Default to 0 if undefined
         });
+        chartData1 = generateData("Electricity Usage (kWh)", monthlyPercentages, energyConsumption.annual);
+        if (energyType != "Annual"){
+          chartData1 = {
+            labels:  chartData1.labels,
+            datasets: [
+              {
+                label: "Electricity Usage (kWh)",
+                data: energyConsumption.monthly,
+                backgroundColor: "rgba(54, 162, 235, 0.2)",
+                borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 1,
+              },
+            ],
+          };
+        }
+        chartData2 = {
+          labels: chartData1.labels,
+          datasets: [
+            {
+              label: "Solar Production (kWh)",
+              data: resultData?.potential,
+              backgroundColor: "rgba(235, 157, 23, 0.2)",
+              borderColor: "rgba(180, 114, 0, 1)",
+            },
+          ],
+        };
+        excessUnderData = chartData2.datasets[0].data.map((value, index) => value - chartData1.datasets[0].data[index]);
+        chartData3 = {
+          ...chartData1,
+          datasets: [
+            chartData1.datasets[0],
+            {
+              label: "Solar Production (kWh)",
+              data: chartData2.datasets[0].data,
+              backgroundColor: "rgba(54, 162, 235, 0.2)",
+              borderColor: "rgba(54, 162, 235, 1)",
+            },
+          ],
+        };
+        chartData4 = {
+          labels: chartData1.labels,
+          datasets: [
+            {
+              label: "Excess/Under Energy (kWh)",
+              data: excessUnderData,
+              backgroundColor: excessUnderData.map((val) => (val > 0 ? "blue" : "red")),
+            },
+          ],
+        };
+        console.log(chartData2);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
@@ -319,8 +370,8 @@ const SolarPlanning: React.FC = () => {
       {
         label: "Excess/Under Energy (kWh)",
         data: resultData?.potential,
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: "rgba(235, 157, 23, 0.2)",
+        borderColor: "rgba(180, 114, 0, 1)",
       },
     ],
   };
@@ -332,8 +383,8 @@ const SolarPlanning: React.FC = () => {
       {
         label: "Solar Production (kWh)",
         data: chartData2.datasets[0].data,
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: "rgba(235, 157, 23, 0.2)",
+        borderColor: "rgba(180, 114, 0, 1)",
       },
     ],
   };
