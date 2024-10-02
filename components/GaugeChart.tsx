@@ -14,22 +14,40 @@ interface GaugeChartProps {
 const GaugeChart: React.FC<GaugeChartProps> = ({ value, maxValue }) => {
   const percentage = (value / maxValue) * 100;
 
+  // Tentukan warna berdasarkan persentase
+  const getColors = () => {
+    if (percentage <= 50) {
+      return ["#4caf50", "#e0e0e0"]; // Hijau jika <= 50%
+    } else {
+      return ["#4caf50", "#87ceeb", "#e0e0e0"]; // Hijau sampai 50%, Merah setelahnya
+    }
+  };
+
+  // Tentukan data berdasarkan persentase
+  const getData = () => {
+    if (percentage <= 50) {
+      return [percentage, 100 - percentage]; // Satu segment hijau
+    } else {
+      return [50, percentage - 50, 100 - percentage]; // Hijau 50%, Merah sisa, abu-abu sisanya
+    }
+  };
+
   const data = {
     datasets: [
       {
-        data: [percentage, 100 - percentage],
-        backgroundColor: ["#4caf50", "#e0e0e0"],
+        data: getData(),
+        backgroundColor: getColors(),
         borderWidth: 0,
-        cutout: "70%", // Creates the hollow space in the middle
-        rotation: -140, // Adjust the start angle to make it vertically symmetrical
-        circumference: 280, // 80% of the circle (ensures the gauge is 80% arc)
+        cutout: "70%", // Membuat area kosong di tengah
+        rotation: -140, // Memulai dari -140 derajat untuk simetri vertikal
+        circumference: 280, // 80% lingkaran (untuk gauge 80% arc)
       },
     ],
   };
 
   const options = {
-    rotation: -140, // Start from -140 degrees (ensuring symmetry)
-    circumference: 280, // Span 280 degrees for the 80% arc
+    rotation: -140, // Mulai dari -140 derajat untuk simetri
+    circumference: 280, // Membentang 280 derajat untuk arc 80%
     plugins: {
       tooltip: { enabled: false },
       legend: { display: false },

@@ -22,6 +22,10 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { computeDistanceBetween } from "spherical-geometry-js"; // Google Maps method to calculate distance
+import { Doughnut } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const containerStyle = {
   width: "100%", // Full width of the screen
@@ -215,6 +219,36 @@ const PipelineDesign: React.FC = () => {
     }).format(amount);
   };
 
+  // Data for the area doughnut chart
+  const areaData = {
+    labels: ["Pipe Area", "Buffer Area"],
+    datasets: [
+      {
+        label: "Area (m²)",
+        data: [pipeLength * bufferWidth, pipeLength * bufferWidth], // Pipe Area and Buffer Area are the same in your code
+        backgroundColor: ["#36A2EB", "#FFCE56"],
+        hoverBackgroundColor: ["#36A2EB", "#FFCE56"],
+      },
+    ],
+  };
+
+  // Data for the cost doughnut chart
+  const costData = {
+    labels: ["Material Cost", "Construction Cost", "Land Use Cost"],
+    datasets: [
+      {
+        label: "Cost (IDR)",
+        data: [
+          pipeLength * materialCost,
+          pipeLength * constructionCost,
+          landUseArea * landUseCostPerCubicMeter,
+        ],
+        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+        hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+      },
+    ],
+  };
+
   return (
     <div className="w-full">
       <div className="relative w-full h-full">
@@ -322,7 +356,7 @@ const PipelineDesign: React.FC = () => {
           <DrawerTrigger asChild>
             <Button variant="default">Show Summary</Button>
           </DrawerTrigger>
-          <DrawerContent>
+          <DrawerContent className="px-10 py-5">
             <DrawerHeader>
               <DrawerTitle>Pipeline Design Summary</DrawerTitle>
               <DrawerDescription>
@@ -333,55 +367,69 @@ const PipelineDesign: React.FC = () => {
             <div className="text-sm px-4 grid grid-cols-4">
               <div className="mt-4">
                 <h3 className="text-lg font-bold underline">Summary</h3>
-                <p>Pipe Length: {pipeLength.toFixed(2)} km</p>
-                <p>Total Cost: {formatRupiah(calculateCosts())}</p>
+                <div className="mt-1">
+                  <p>Pipe Length:</p>
+                  <p className="text-3xl">{pipeLength.toFixed(2)} km</p>
+                </div>
+                <div className="mt-3">
+                  <p>Total Cost:</p>
+                  <p className="text-3xl">{formatRupiah(calculateCosts())}</p>
+                </div>
               </div>
 
               <div className="mt-4">
                 <h3 className="text-lg font-bold underline">Project Area</h3>
-                <p>Pipe Area: {(pipeLength * bufferWidth).toFixed(2)} m²</p>
-                <p>Buffer Area: {(pipeLength * bufferWidth).toFixed(2)} m²</p>
-                <p>Total Area: {landUseArea.toFixed(2)} m²</p>
+                <div className="flex items-center mb-4">
+                  <div className="relative size-[200px]">
+                    <Doughnut data={areaData} />
+                  </div>
+                  <div className="">
+                    <p>Pipe Area: {(pipeLength * bufferWidth).toFixed(2)} m²</p>
+                    <p>Buffer Area: {(pipeLength * bufferWidth).toFixed(2)} m²</p>
+                    <p>Total Area: {landUseArea.toFixed(2)} m²</p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-4">
                 <h3 className="text-lg font-bold underline">Cost Detail</h3>
-                <p>Material Cost: {formatRupiah(pipeLength * materialCost)}</p>
-                <p>
-                  Construction Cost:{" "}
-                  {formatRupiah(pipeLength * constructionCost)}
-                </p>
-                <p>
-                  Land Use Cost:{" "}
-                  {formatRupiah(landUseArea * landUseCostPerCubicMeter)}
-                </p>
-                <p>
-                  Total Cost:{" "}
-                  {formatRupiah(
-                    calculateCosts() - landUseArea * landUseCostPerCubicMeter
-                  )}
-                </p>
+                <div className="flex items-center mb-4">
+                  <div className="relative size-[200px]">
+                    <Doughnut data={costData} />
+                  </div>
+                  <div className="">
+                    <p>Material Cost: {formatRupiah(pipeLength * materialCost)}</p>
+                    <p>
+                      Construction Cost:{" "}
+                      {formatRupiah(pipeLength * constructionCost)}
+                    </p>
+                    <p>
+                      Land Use Cost:{" "}
+                      {formatRupiah(landUseArea * landUseCostPerCubicMeter)}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-4">
-                <h3 className="text-lg font-bold underline">
+                <h3 className="text-lg font-bold underline mb-1">
                   Socio-Environmental Impact
                 </h3>
                 <p>Jobs Created: {calculateJobs().toFixed(0)}</p>
                 <p>Carbon Impact:</p>
                 <ol className="list-disc ml-5">
                   <li>
-                    Carbon Absorbed: {calculateCarbonImpact().carbonAbsorbed}
+                    Carbon Absorbed: {calculateCarbonImpact().carbonAbsorbed.toFixed(2)} kg
                   </li>
                   <li>
-                    Carbon Injected: {calculateCarbonImpact().carbonInjected}
+                    Carbon Injected: {calculateCarbonImpact().carbonInjected.toFixed(2)} kg
                   </li>
                 </ol>
-                <p>Capacity Estimation: {calculateCapacityEstimation()} m³</p>
+                <p>Capacity Estimation: {calculateCapacityEstimation().toFixed(2)} m³</p>
               </div>
             </div>
             <DrawerClose />
-            <DrawerFooter>
+            <DrawerFooter className="mt-5">
               <Button variant="default" onClick={() => setDrawerOpen(false)}>
                 Close
               </Button>

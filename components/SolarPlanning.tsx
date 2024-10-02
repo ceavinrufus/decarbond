@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
-import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,6 +24,7 @@ import {
   Legend,
 } from "chart.js";
 import GaugeChart from "./GaugeChart";
+import { RenderChart } from "./RenderChart";
 
 // Constants
 const defaultElectricityPrice = 1444.7;
@@ -43,22 +43,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-// Chart Display Function
-const renderChart = (chartType: string, chartData: any) => {
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: "top" as const },
-      title: { display: true, text: `${chartType}` },
-    },
-  };
-  return (
-    <div className="w-full max-h-[75vh] h-full p-4 min-h-60">
-      <Bar data={chartData} options={options} />
-    </div>
-  );
-};
 
 // Sample chart data for all charts
 const generateData = (
@@ -933,7 +917,7 @@ const SolarPlanning: React.FC = () => {
                 Solar Production Annually : {resultData?.solarProduction} kWh
               </p>
               <p>Saving Annually : Rp{resultData?.savings}</p>
-              <GaugeChart value={resultData?.energyCoverage} maxValue={1} />
+              <GaugeChart value={resultData?.energyCoverage} maxValue={200} />
               <p>Green Energy Coverage : {resultData?.energyCoverage}%</p>
             </div>
           </div>
@@ -971,10 +955,10 @@ const SolarPlanning: React.FC = () => {
         </div>
 
         <div className="p-6 w-full max-w-2xl mt-8 flex flex-col space-y-4 overflow-y-auto max-h-[40rem]">
-          {renderChart("Electricity Usage", chartData1)}
-          {renderChart("Solar Production", chartData2)}
-          {renderChart("Electricity Combination", chartData3)}
-          {renderChart("Excess/Under Energy", chartData4)}
+          {RenderChart("Electricity Usage", chartData1)}
+          {RenderChart("Solar Production", chartData2)}
+          {RenderChart("Electricity Combination", chartData3)}
+          {RenderChart("Excess/Under Energy", chartData4)}
         </div>
       </div>
     </div>
