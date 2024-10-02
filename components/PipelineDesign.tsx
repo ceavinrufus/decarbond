@@ -29,8 +29,8 @@ const containerStyle = {
 };
 
 const center = {
-  lat: -6.2,
-  lng: 106.816666,
+  lat: -3.2049,
+  lng: 104.0822,
 };
 
 interface IPath {
@@ -58,14 +58,20 @@ const PipelineDesign: React.FC = () => {
   const [landUseCostPerCubicMeter, setLandUseCostPerCubicMeter] =
     useState<number>(50); // Cost per cubic meter for land use
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [tilesVisible, setTilesVisible] = useState<boolean>(false);
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   const elevationServiceRef = useRef<google.maps.ElevationService | null>(null);
 
-  const onLoadMap = useCallback(() => {
-    if (!elevationServiceRef.current && window.google) {
-      elevationServiceRef.current = new google.maps.ElevationService();
-    }
-  }, []);
+  const onLoadMap = useCallback(
+    (map: google.maps.Map) => {
+      if (!elevationServiceRef.current && window.google) {
+        elevationServiceRef.current = new google.maps.ElevationService();
+      }
+      mapRef.current = map;
+    },
+    [mapRef]
+  );
 
   const calculatePipeLength = useCallback((polylines: any) => {
     let totalLength = 0;
@@ -86,6 +92,30 @@ const PipelineDesign: React.FC = () => {
     const bufferZoneArea = pipeLength * bufferWidth;
     setLandUseArea(pipeArea + bufferZoneArea); // Total land use
   }, [pipeLength, bufferWidth]);
+
+  const toggleTiles = () => {
+    if (mapRef.current) {
+      const xyzTiles = new google.maps.ImageMapType({
+        getTileUrl: (coord, zoom) => {
+          if (zoom > 10) {
+            return "";
+          }
+          return `/images/${zoom}/${coord.x}/${coord.y}.png`;
+        },
+        tileSize: new google.maps.Size(256, 256),
+        maxZoom: 10,
+        minZoom: 5,
+        name: "Solar HeatMap Tiles",
+      });
+
+      if (tilesVisible) {
+        mapRef.current.overlayMapTypes.removeAt(0); // Remove tiles
+      } else {
+        mapRef.current.overlayMapTypes.insertAt(0, xyzTiles); // Show tiles
+      }
+      setTilesVisible(!tilesVisible);
+    }
+  };
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
@@ -176,57 +206,69 @@ const PipelineDesign: React.FC = () => {
 
   return (
     <div className="w-full">
-      <LoadScript
-        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-      >
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={10}
-          onLoad={onLoadMap}
-          onClick={handleMapClick}
-          onRightClick={handleMapRightClick}
+      <div className="relative w-full h-full">
+        <LoadScript
+          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
         >
-          {showMarker &&
-            markers.map((marker, index) => (
-              <Marker
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={10}
+            onLoad={onLoadMap}
+            onClick={handleMapClick}
+            onRightClick={handleMapRightClick}
+          >
+            {showMarker &&
+              markers.map((marker, index) => (
+                <Marker
+                  key={index}
+                  position={marker}
+                  onClick={() => handleMarkerClick(index)}
+                />
+              ))}
+
+            {polylines.map((path, index) => (
+              <Polyline
                 key={index}
-                position={marker}
-                onClick={() => handleMarkerClick(index)}
+                path={path}
+                options={{
+                  strokeColor: "#FF0000",
+                  strokeOpacity: 1.0,
+                  strokeWeight: 2,
+                }}
               />
             ))}
 
-          {polylines.map((path, index) => (
-            <Polyline
-              key={index}
-              path={path}
-              options={{
-                strokeColor: "#FF0000",
-                strokeOpacity: 1.0,
-                strokeWeight: 2,
-              }}
-            />
-          ))}
+            {infoWindowPosition && elevation !== null && (
+              <InfoWindow
+                position={infoWindowPosition}
+                onCloseClick={() => setInfoWindowPosition(null)}
+              >
+                <div>
+                  <p>
+                    <strong>Coordinates:</strong>{" "}
+                    {infoWindowPosition.lat.toFixed(6)},{" "}
+                    {infoWindowPosition.lng.toFixed(6)}
+                  </p>
+                  <p>
+                    <strong>Elevation:</strong> {elevation.toFixed(2)} meters
+                  </p>
+                </div>
+              </InfoWindow>
+            )}
+          </GoogleMap>
+        </LoadScript>
 
-          {infoWindowPosition && elevation !== null && (
-            <InfoWindow
-              position={infoWindowPosition}
-              onCloseClick={() => setInfoWindowPosition(null)}
-            >
-              <div>
-                <p>
-                  <strong>Coordinates:</strong>{" "}
-                  {infoWindowPosition.lat.toFixed(6)},{" "}
-                  {infoWindowPosition.lng.toFixed(6)}
-                </p>
-                <p>
-                  <strong>Elevation:</strong> {elevation.toFixed(2)} meters
-                </p>
-              </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
-      </LoadScript>
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
+          <Button
+            onClick={toggleTiles}
+            className="bg-white text-black rounded-full"
+            title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
+          >
+            ☀️
+          </Button>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between space-x-2 mt-4">
         <div className="">

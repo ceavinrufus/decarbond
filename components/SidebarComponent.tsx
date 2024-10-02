@@ -20,8 +20,8 @@ import { cn } from "@/lib/utils";
 export function SidebarComponent() {
   const links = [
     {
-      label: "Home",
-      href: "/",
+      label: "Information Center",
+      href: "/information-center",
       icon: <IconBrandTabler className="text-white h-5 w-5 flex-shrink-0" />,
     },
     {
