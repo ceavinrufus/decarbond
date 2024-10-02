@@ -76,6 +76,7 @@ const SolarPlanning: React.FC = () => {
     greenEnergy: number;
     co2Saved: number;
     solarProduction: number;
+    optimumTilt:number;
     savings: number;
     energyCoverage: number;
     batteryStorageAh:number;
@@ -98,6 +99,7 @@ const SolarPlanning: React.FC = () => {
     treesNeeded: 0,
     greenEnergy: 0,
     co2Saved: 0,
+    optimumTilt:0,
     solarProduction: 0,
     savings: 0,
     energyCoverage: 0,
@@ -240,12 +242,12 @@ const SolarPlanning: React.FC = () => {
       .then((response) => response.json())
       .then((data) => {
         const pvout_all = data.monthly.data.PVOUT_csi;
-        const pvout_avg = pvout_all.reduce((accumulator:number, currentValue:number) => accumulator + currentValue, 0) / pvout_all.length;
+        const pvout_avg = (pvout_all.reduce((accumulator:number, currentValue:number) => accumulator + currentValue, 0) / pvout_all.length)*12;
         const panelCapacity = 350; // Watts
         const panelCount = solarPanel.current.length;
         const installationSize = (panelCount * panelCapacity) / 1000; // kWp
         const installationCost = panelCount * 1700000; // Assuming 1.7M IDR per panel
-  
+        const optimumTilt = data.annual.data.OPTA;
         const yearlySolarProduction = pvout_avg * installationSize; // kWh/year
   
         // Calculations
@@ -264,10 +266,11 @@ const SolarPlanning: React.FC = () => {
         // Set the result data
         setResultData({
           installationSize: Number(installationSize.toFixed(2)),
-          averagePotential: Number(pvout_avg.toFixed(2)),
+          averagePotential: Number((pvout_avg).toFixed(2)),
           installationCost,
           treesNeeded: Number(treesNeeded.toFixed(2)),
           potential:pvout_all,
+          optimumTilt,
           greenEnergy: Number(yearlySolarProduction.toFixed(2)),
           co2Saved: Number(kgCO2.toFixed(2)),
           solarProduction: Number(yearlySolarProduction.toFixed(2)),
@@ -294,8 +297,23 @@ const SolarPlanning: React.FC = () => {
     setMapType((prev) => (prev === "roadmap" ? "satellite" : "roadmap"));
   };
   // Chart data definitions
-  const chartData1 = generateData("Electricity Usage (kWh)", monthlyPercentages, energyConsumption.annual);
-  const chartData2 = {
+  
+  var chartData1 = generateData("Electricity Usage (kWh)", monthlyPercentages, energyConsumption.annual);
+  if (energyType != "Annual"){
+    chartData1 = {
+      labels:  chartData1.labels,
+      datasets: [
+        {
+          label: "Excess/Under Energy (kWh)",
+          data: energyConsumption.monthly,
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 1,
+        },
+      ],
+    };
+  }
+  var chartData2 = {
     labels: chartData1.labels,
     datasets: [
       {
@@ -306,8 +324,8 @@ const SolarPlanning: React.FC = () => {
       },
     ],
   };
-  const excessUnderData = chartData2.datasets[0].data.map((value, index) => value - chartData1.datasets[0].data[index]);
-  const chartData3 = {
+  var excessUnderData = chartData2.datasets[0].data.map((value, index) => value - chartData1.datasets[0].data[index]);
+  var chartData3 = {
     ...chartData1,
     datasets: [
       chartData1.datasets[0],
@@ -319,7 +337,7 @@ const SolarPlanning: React.FC = () => {
       },
     ],
   };
-  const chartData4 = {
+  var chartData4 = {
     labels: chartData1.labels,
     datasets: [
       {
@@ -442,8 +460,9 @@ const SolarPlanning: React.FC = () => {
         <h2 className="text-2xl font-bold mb-2">Summary</h2>
         <div>
           <p>Installation Size : {resultData?.installationSize} kWp</p>
-          <p className="mb-4">Average Potential : {resultData?.averagePotential} kWh/kWp</p>
-          <p className="mb-4">Cost : Rp{resultData?.installationCost}</p>
+          <p>Average Potential (annual) : {resultData?.averagePotential} kWh/kWp</p>
+          <p>Cost : Rp{resultData?.installationCost}</p>
+          <p className="mb-4">Optimum Tilt : {resultData?.optimumTilt} degree</p>
           <div className="flex justify-around">
             {/* Gambar 1 - Pohon */}
             <div className="text-center">
@@ -466,7 +485,7 @@ const SolarPlanning: React.FC = () => {
         </div>
 
         {/* Bagian Energi */}
-        <h2 className="text-2xl font-bold mb-2 mt-8">Energy</h2>
+        <h2 className="text-2xl font-bold mb-2 mt-6">Energy</h2>
         <div className="flex justify-between">
           <div>
             <p>Solar Production Annually : {resultData?.solarProduction} kWh</p>
@@ -478,24 +497,24 @@ const SolarPlanning: React.FC = () => {
 
           {/* Additional / Lacking Power */}
           <h2 className="text-2xl font-bold mb-2 mt-8">Additional / Lacking Power</h2>
-    <div className="flex flex-col space-y-4">
-      <div className="flex items-center">
-        <img src="/images/logo/battery.png" alt="Battery" className="h-16 w-16 mr-4" />
-        <p>
-          {resultData?.batteryStorageAh > 0
-            ? `Recomended Battery Storage : ${resultData?.batteryStorageAh} Ah`
-            : "No battery storage needed"}
-        </p>
-      </div>
-      <div className="flex items-center">
-        <img src="/images/logo/energy.png" alt="Energy" className="h-16 w-16 mr-4" />
-        <p>
-          {resultData?.neededEnergy > 0
-            ? `You will still need to buy ${resultData?.neededEnergy} kWh energy`
-            : "No additional energy required"}
-        </p>
-      </div>
-    </div>
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center">
+              <img src="/images/logo/battery.png" alt="Battery" className="h-16 w-16 mr-4" />
+              <p>
+                {resultData?.batteryStorageAh > 0
+                  ? `Recomended Battery Storage : ${resultData?.batteryStorageAh} Ah`
+                  : "No battery storage needed"}
+              </p>
+            </div>
+            <div className="flex items-center">
+              <img src="/images/logo/energy.png" alt="Energy" className="h-16 w-16 mr-4" />
+              <p>
+                {resultData?.neededEnergy > 0
+                  ? `You will still need to buy ${resultData?.neededEnergy} kWh energy annually`
+                  : "No additional energy required"}
+              </p>
+            </div>
+          </div>
 
           
         </div>
