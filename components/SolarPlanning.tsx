@@ -89,20 +89,30 @@ const SolarPlanning: React.FC = () => {
     rating: number;
     width: number;
     height: number;
+    price:number;
   }
   
   const defaultModule: SolarModule = {
     model: 'Jinko Solar JKM310M-72B',
     rating: 310,
     width: 0.992,
-    height: 1.956
+    height: 1.956,
+    price:1700000
   };
   
   const moduleData: SolarModule[] = [
-    { model: 'Jinko Solar JKM310M-72B', rating: 310, width: 0.992, height: 1.956 },
-    { model: 'SunPower SPR P3 335 BLK', rating: 335, width: 0.998, height: 1.69 },
-    { model: 'SunPower SPR P3 370 BLK', rating: 370, width: 1.16, height: 1.69 },
-    { model: 'Panasonic VBHN325SA6', rating: 325, width: 1.053, height: 1.59 }
+    { model: 'Jinko Solar JKM310M-72B', rating: 310, width: 0.992, height: 1.956, price:1700000 },
+    { model: 'SunPower SPR P3 335 BLK', rating: 335, width: 0.998, height: 1.69, price:1700000 },
+    { model: 'SunPower SPR P3 370 BLK', rating: 370, width: 1.16, height: 1.69, price:1700000 },
+    { model: 'Panasonic VBHN325SA6', rating: 325, width: 1.053, height: 1.59, price:1700000 },
+    { model: 'Solarcell 200WP Mono', rating: 200, width: 0.76, height: 1.29, price:860000 },
+    { model: 'Solarcell 100WP Mono', rating: 100, width: 0.67, height: 0.76, price:450000 },
+    { model: 'SunAsia 100WP Mono', rating: 100, width: 0.67, height: 0.76, price:500000 },
+    { model: 'SunAsia 100WP Poly', rating: 100, width: 0.67, height: 1.03, price:600000 },
+    { model: 'LONGi 435WP', rating: 435, width: 1.134, height: 1.722, price:1460000 },
+    { model: 'LONGi 565WP', rating: 565, width: 1.134, height: 2.278, price:1665000 },
+    { model: 'LONGi 580WP', rating: 580, width: 1.134, height: 2.278, price:1775000 },
+    { model: 'Vertex Monokristalin 550WP', rating: 550, width: 1.096, height: 2.384, price:1670000 },
   ];
   const [tilesVisible, setTilesVisible] = useState(false);
   const [lastRectangleBounds, setLastRectangleBounds] = useState<google.maps.LatLngBounds | null>(null);
@@ -157,7 +167,8 @@ const SolarPlanning: React.FC = () => {
       model: customModule.model,
       rating: Number(customModule.rating),
       width: Number(customModule.width),
-      height: Number(customModule.height)
+      height: Number(customModule.height),
+      price: Number(customModule.price)
     };
     setSelectedModule(custom);
     setOpen(false); // Close dialog after selection
@@ -270,8 +281,10 @@ const SolarPlanning: React.FC = () => {
   function boundChangeEvent(rectangle:google.maps.Rectangle) {
     const bounds = rectangle.getBounds(); 
     if (bounds){
-      const newNorthEast = new google.maps.LatLng(bounds.getNorthEast().lat()-0.000018, bounds.getNorthEast().lng()-0.000009);
-      const newSouthWest = new google.maps.LatLng(bounds.getSouthWest().lat()+0.000018, bounds.getSouthWest().lng()+0.000009);
+      const latOffset = 0.000009*selectedModule.height; // ~2 meter
+      const lngOffset = 0.000009*selectedModule.width; // ~1 meter
+      const newNorthEast = new google.maps.LatLng(bounds.getNorthEast().lat()-latOffset, bounds.getNorthEast().lng()-lngOffset);
+      const newSouthWest = new google.maps.LatLng(bounds.getSouthWest().lat()+latOffset, bounds.getSouthWest().lng()+lngOffset);
       setLastRectangleBounds(new google.maps.LatLngBounds(newSouthWest, newNorthEast));
     }
   }
@@ -304,26 +317,21 @@ const SolarPlanning: React.FC = () => {
         const kgCO2 = yearlySolarProduction * co2PerKWh; // kg CO2 saved
         const treesNeeded = kgCO2 / kgCO2PerTree; // Equivalent number of trees
         const savings = yearlySolarProduction * electricityPrice; // Savings in Rp/year
-        var averageAnnualConsumption = energyConsumption.monthly.reduce((acc:number, curr:number) => acc + curr, 0);
-        var energyCoverage = yearlySolarProduction / energyConsumption.annual; // Green energy coverage
-
-        if (energyType != "Annual"){
-          var energyCoverage = yearlySolarProduction / averageAnnualConsumption;
+        let annualConsumption = energyConsumption.annual;
+        if (energyType === "Monthly"){
+          annualConsumption = energyConsumption.monthly.reduce((acc: number, curr: number) => acc + Number(curr), 0);
         }
+        var energyCoverage = yearlySolarProduction / annualConsumption; // Green energy coverage
+        console.log(annualConsumption);
         let neededEnergy = 0;
         let batteryStorageAh = 0;
         if (energyCoverage < 1) {
-          neededEnergy = energyConsumption.annual - yearlySolarProduction;
-          if (energyType != "Annual"){
-            neededEnergy = averageAnnualConsumption - yearlySolarProduction;
-          }
+          neededEnergy = annualConsumption - yearlySolarProduction;
+          
         } else {
-          var tambahan = yearlySolarProduction - averageAnnualConsumption;
+          var tambahan = yearlySolarProduction - annualConsumption;
           // Recommendation for battery storage (simplified assumption)
           batteryStorageAh = (tambahan * 1000) / (48 * 365); // Assume 48V system
-          if (energyType != "Annual"){
-            batteryStorageAh = (tambahan * 1000) / (48 * 365); // Assume 48V system
-          }
         }
         // Set the result data
         setResultData({
@@ -390,7 +398,7 @@ const SolarPlanning: React.FC = () => {
             },
           ],
         };
-        console.log(chartData2);
+  
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
@@ -527,6 +535,7 @@ const SolarPlanning: React.FC = () => {
                   <TableCell>Rating</TableCell>
                   <TableCell>Width (m)</TableCell>
                   <TableCell>Height (m)</TableCell>
+                  <TableCell>Price (Rp)</TableCell>
                   <TableCell>Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -537,6 +546,7 @@ const SolarPlanning: React.FC = () => {
                     <TableCell>{module.rating}</TableCell>
                     <TableCell>{module.width}</TableCell>
                     <TableCell>{module.height}</TableCell>
+                    <TableCell>{module.price}</TableCell>
                     <TableCell>
                       <Button onClick={() => handleSelect(module)}>Select</Button>
                     </TableCell>
@@ -582,6 +592,17 @@ const SolarPlanning: React.FC = () => {
                       label="Custom Height"
                       name="height"
                       value={customModule.height}
+                      onChange={handleCustomInput}
+                      variant="outlined"
+                      size="small"
+                      type="number"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      label="Custom Price"
+                      name="price"
+                      value={customModule.price}
                       onChange={handleCustomInput}
                       variant="outlined"
                       size="small"
