@@ -58,7 +58,7 @@ const PipelineDesign: React.FC = () => {
   const [landUseCostPerCubicMeter, setLandUseCostPerCubicMeter] =
     useState<number>(50); // Cost per cubic meter for land use
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const [tilesVisible, setTilesVisible] = useState<boolean>(false);
+  const [tilesVisible, setTilesVisible] = useState<string[]>([]);
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const elevationServiceRef = useRef<google.maps.ElevationService | null>(null);
@@ -93,27 +93,38 @@ const PipelineDesign: React.FC = () => {
     setLandUseArea(pipeArea + bufferZoneArea); // Total land use
   }, [pipeLength, bufferWidth]);
 
-  const toggleTiles = () => {
+  const toggleTiles = (mode: string) => {
     if (mapRef.current) {
       const xyzTiles = new google.maps.ImageMapType({
         getTileUrl: (coord, zoom) => {
           if (zoom > 10) {
             return "";
           }
-          return `/PIPELINE/${zoom}/${coord.x}/${coord.y}.png`;
+          return `/${mode}/${zoom}/${coord.x}/${coord.y}.png`;
         },
         tileSize: new google.maps.Size(256, 256),
         maxZoom: 10,
         minZoom: 5,
-        name: "Solar HeatMap Tiles",
+        name: mode,
       });
 
-      if (tilesVisible) {
-        mapRef.current.overlayMapTypes.removeAt(0); // Remove tiles
+      const overlayMapTypes = mapRef.current.overlayMapTypes;
+
+      if (tilesVisible.includes(mode)) {
+        // Find the index of the layer to remove based on the mode (or name)
+        const indexToRemove = overlayMapTypes.getArray().findIndex(
+          (layer) => layer && layer.name === mode
+        );
+
+        if (indexToRemove !== -1) {
+          overlayMapTypes.removeAt(indexToRemove); // Remove the correct tile layer
+        }
+
+        setTilesVisible(tilesVisible.filter((tile) => tile !== mode));
       } else {
-        mapRef.current.overlayMapTypes.insertAt(0, xyzTiles); // Show tiles
+        overlayMapTypes.insertAt(0, xyzTiles); // Add the new tile layer
+        setTilesVisible([...tilesVisible, mode]);
       }
-      setTilesVisible(!tilesVisible);
     }
   };
 
@@ -261,11 +272,39 @@ const PipelineDesign: React.FC = () => {
 
         <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
           <Button
-            onClick={toggleTiles}
-            className="bg-white text-black rounded-full"
-            title={tilesVisible ? "Hide Solar Heatmap" : "View Solar Heatmap"}
+            onClick={() => toggleTiles("PIPELINE")}
+            className={`${tilesVisible.includes("PIPELINE") ? "bg-primary text-white" : "bg-white text-black"
+              } rounded-full`}
           >
-            ☀️
+            PIPELINE
+          </Button>
+          <Button
+            onClick={() => toggleTiles("PERKEBUNAN")}
+            className={`${tilesVisible.includes("PERKEBUNAN") ? "bg-primary text-white" : "bg-white text-black"
+              } rounded-full`}
+          >
+            PLANTATION
+          </Button>
+          <Button
+            onClick={() => toggleTiles("POWERPLANT")}
+            className={`${tilesVisible.includes("POWERPLANT") ? "bg-primary text-white" : "bg-white text-black"
+              } rounded-full`}
+          >
+            POWER PLANT
+          </Button>
+          <Button
+            onClick={() => toggleTiles("SAWAH")}
+            className={`${tilesVisible.includes("SAWAH") ? "bg-primary text-white" : "bg-white text-black"
+              } rounded-full`}
+          >
+            RICEFIELD
+          </Button>
+          <Button
+            onClick={() => toggleTiles("WELL")}
+            className={`${tilesVisible.includes("WELL") ? "bg-primary text-white" : "bg-white text-black"
+              } rounded-full`}
+          >
+            WELL
           </Button>
         </div>
       </div>
