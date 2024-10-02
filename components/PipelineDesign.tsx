@@ -415,17 +415,21 @@ const PipelineDesign: React.FC = () => {
                 <h3 className="text-lg font-bold underline mb-1">
                   Socio-Environmental Impact
                 </h3>
-                <p>Jobs Created: {calculateJobs().toFixed(0)}</p>
-                <p>Carbon Impact:</p>
-                <ol className="list-disc ml-5">
-                  <li>
-                    Carbon Absorbed: {calculateCarbonImpact().carbonAbsorbed.toFixed(2)} kg
-                  </li>
-                  <li>
-                    Carbon Injected: {calculateCarbonImpact().carbonInjected.toFixed(2)} kg
-                  </li>
-                </ol>
-                <p>Capacity Estimation: {calculateCapacityEstimation().toFixed(2)} m³</p>
+                <div className="space-y-2">
+                  <p><span className="text-2xl">{calculateJobs().toFixed(0)}</span> jobs created</p>
+                  <div className="">
+                    <p>Carbon Impact:</p>
+                    <ol className="list-disc ml-5">
+                      <li>
+                        <span className="text-2xl">{calculateCarbonImpact().carbonAbsorbed.toFixed(2)} kg</span> carbon absorbed
+                      </li>
+                      <li>
+                        <span className="text-2xl">{calculateCarbonImpact().carbonInjected.toFixed(2)} kg</span> carbon injected
+                      </li>
+                    </ol>
+                  </div>
+                  <p>Capacity Estimation: <span className="text-2xl">{calculateCapacityEstimation().toFixed(2)} m³</span></p>
+                </div>
               </div>
             </div>
             <DrawerClose />
