@@ -100,7 +100,7 @@ const PipelineDesign: React.FC = () => {
           if (zoom > 10) {
             return "";
           }
-          return `/images/${zoom}/${coord.x}/${coord.y}.png`;
+          return `/PIPELINE/${zoom}/${coord.x}/${coord.y}.png`;
         },
         tileSize: new google.maps.Size(256, 256),
         maxZoom: 10,
