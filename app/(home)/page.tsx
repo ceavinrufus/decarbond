@@ -36,8 +36,8 @@ export default function Home() {
       <div className="">
         <h1 className="text-center text-3xl font-bold mb-10">Meet Our Team</h1>
         <div className="flex justify-around">
-          {founders.map((founder) => (
-            <FounderCard founder={founder} />
+          {founders.map((founder, index) => (
+            <FounderCard key={index} founder={founder} />
           ))}
         </div>
       </div>

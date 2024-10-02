@@ -11,16 +11,13 @@ const Hero = () => {
             <Image src="/text-logo.png" alt="Decarbond" fill priority />
           </div>
           <p className="text-xl font-semibold my-5">
-            The Ultimate One-For-All{" "}
-            <span className="underline">Decarbonization Design</span> and{" "}
-            <span className="underline">Planning Software</span>
+            Your Future Decarbonization Super App
           </p>
           <p className="">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Eveniet ut
-            omnis exercitationem. Debitis, neque nobis, distinctio magni itaque
-            asperiores aperiam, cumque magnam rerum est ea error omnis impedit?
-            Dicta commodi quod sit ducimus quae optio voluptates ipsa esse
-            voluptatem officia.
+            Decarbond is a software to plan, design, simulate, monitor, and
+            optimize decarbonization project. Start from transition energy
+            projects to emission management. Decarbond aim to be the ultimate
+            All-in-One Decarbonization design and planning software.
           </p>
         </div>
         <StartPlanning />
