@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import GaugeChart from "./GaugeChart";
 
 // Constants
 const defaultElectricityPrice = 1444.7;
@@ -541,6 +542,7 @@ const SolarPlanning: React.FC = () => {
           <div>
             <p>Solar Production Annually : {resultData?.solarProduction} kWh</p>
             <p>Saving Annually : Rp{resultData?.savings}</p>
+            <GaugeChart value={resultData?.energyCoverage} maxValue={1}/>
             <p>Green Energy Coverage : {resultData?.energyCoverage}%</p>
           </div>
         </div>
