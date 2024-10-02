@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, ChangeEvent } from 'react';
+import { Dialog, DialogTitle, DialogContent, Table, TableBody, TableCell, TableHead, TableRow, TextField } from '@mui/material';
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Bar } from "react-chartjs-2";
@@ -83,6 +84,36 @@ const SolarPlanning: React.FC = () => {
     batteryStorageAh:number;
     neededEnergy:number;
   }
+  interface SolarModule {
+    model: string;
+    rating: number;
+    width: number;
+    height: number;
+    price:number;
+  }
+  
+  const defaultModule: SolarModule = {
+    model: 'Jinko Solar JKM310M-72B',
+    rating: 310,
+    width: 0.992,
+    height: 1.956,
+    price:1700000
+  };
+  
+  const moduleData: SolarModule[] = [
+    { model: 'Jinko Solar JKM310M-72B', rating: 310, width: 0.992, height: 1.956, price:1700000 },
+    { model: 'SunPower SPR P3 335 BLK', rating: 335, width: 0.998, height: 1.69, price:1700000 },
+    { model: 'SunPower SPR P3 370 BLK', rating: 370, width: 1.16, height: 1.69, price:1700000 },
+    { model: 'Panasonic VBHN325SA6', rating: 325, width: 1.053, height: 1.59, price:1700000 },
+    { model: 'Solarcell 200WP Mono', rating: 200, width: 0.76, height: 1.29, price:860000 },
+    { model: 'Solarcell 100WP Mono', rating: 100, width: 0.67, height: 0.76, price:450000 },
+    { model: 'SunAsia 100WP Mono', rating: 100, width: 0.67, height: 0.76, price:500000 },
+    { model: 'SunAsia 100WP Poly', rating: 100, width: 0.67, height: 1.03, price:600000 },
+    { model: 'LONGi 435WP', rating: 435, width: 1.134, height: 1.722, price:1460000 },
+    { model: 'LONGi 565WP', rating: 565, width: 1.134, height: 2.278, price:1665000 },
+    { model: 'LONGi 580WP', rating: 580, width: 1.134, height: 2.278, price:1775000 },
+    { model: 'Vertex Monokristalin 550WP', rating: 550, width: 1.096, height: 2.384, price:1670000 },
+  ];
   const [tilesVisible, setTilesVisible] = useState(false);
   const [lastRectangleBounds, setLastRectangleBounds] = useState<google.maps.LatLngBounds | null>(null);
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
@@ -107,14 +138,42 @@ const SolarPlanning: React.FC = () => {
     batteryStorageAh: 0,  // Default to 0
     neededEnergy: 0,      // Default to 0
   });
-  
   const mapRef = useRef<google.maps.Map | null>(null);
   const solarPanel = useRef<google.maps.Rectangle[]>([]); // Use ref to store solarPanel array
   
   let infoWindow: google.maps.InfoWindow | undefined;
  	
   var contentString="";
-  
+  // Solar Module Selection
+  const [open, setOpen] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<SolarModule>(defaultModule);
+  const [customModule, setCustomModule] = useState<{ [key: string]: string }>({ model: '', rating: '', width: '', height: '' });
+
+  const handleSelect = (module: SolarModule) => {
+    setSelectedModule(module);
+    setOpen(false); // Close dialog after selection
+  };
+
+  const handleCustomInput = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCustomModule((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCustomSelect = () => {
+    const custom: SolarModule = {
+      model: customModule.model,
+      rating: Number(customModule.rating),
+      width: Number(customModule.width),
+      height: Number(customModule.height),
+      price: Number(customModule.price)
+    };
+    setSelectedModule(custom);
+    setOpen(false); // Close dialog after selection
+  };
+
   const handleEnergyTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setEnergyType(event.target.value);
   };
@@ -159,8 +218,8 @@ const SolarPlanning: React.FC = () => {
         if (!center) return;
 
         const spCount = solarPanel.current.length;
-        const latOffset = 0.000018; // ~2 meter
-        const lngOffset = 0.000009; // ~1 meter
+        const latOffset = 0.000009*selectedModule.height; // ~2 meter
+        const lngOffset = 0.000009*selectedModule.width; // ~1 meter
 
         let solarPanelCoords;
         var newNorthEast;
@@ -211,7 +270,7 @@ const SolarPlanning: React.FC = () => {
           solarPanel.current = solarPanel.current.filter(rect => rect !== newRectangle); // Remove from the array
          });
         // Add an event listener on the rectangle.
-        google.maps.event.addListener(mapRef.current, "idle", () => showNewRect(newRectangle));
+        google.maps.event.addListener(mapRef.current, "idle", () => showNewRect(newRectangle, selectedModule.rating));
         // Define an info window on the map.
         infoWindow = new google.maps.InfoWindow();
 
@@ -222,15 +281,17 @@ const SolarPlanning: React.FC = () => {
   function boundChangeEvent(rectangle:google.maps.Rectangle) {
     const bounds = rectangle.getBounds(); 
     if (bounds){
-      const newNorthEast = new google.maps.LatLng(bounds.getNorthEast().lat()-0.000018, bounds.getNorthEast().lng()-0.000009);
-      const newSouthWest = new google.maps.LatLng(bounds.getSouthWest().lat()+0.000018, bounds.getSouthWest().lng()+0.000009);
+      const latOffset = 0.000009*selectedModule.height; // ~2 meter
+      const lngOffset = 0.000009*selectedModule.width; // ~1 meter
+      const newNorthEast = new google.maps.LatLng(bounds.getNorthEast().lat()-latOffset, bounds.getNorthEast().lng()-lngOffset);
+      const newSouthWest = new google.maps.LatLng(bounds.getSouthWest().lat()+latOffset, bounds.getSouthWest().lng()+lngOffset);
       setLastRectangleBounds(new google.maps.LatLngBounds(newSouthWest, newNorthEast));
     }
   }
   const handleElectricityPriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setElectricityPrice(parseFloat(event.target.value));
   };
-  async function showNewRect(sp: google.maps.Rectangle) {
+  async function showNewRect(sp: google.maps.Rectangle, rating:number) {
     const ne = sp.getBounds()?.getNorthEast();
     const sw = sp.getBounds()?.getSouthWest();
     if (!ne || !sw || !mapRef.current) return;
@@ -244,7 +305,7 @@ const SolarPlanning: React.FC = () => {
       .then((data) => {
         const pvout_all = data.monthly.data.PVOUT_csi;
         const pvout_avg = (pvout_all.reduce((accumulator:number, currentValue:number) => accumulator + currentValue, 0) / pvout_all.length)*12;
-        const panelCapacity = 350; // Watts
+        const panelCapacity = rating; // Watts
         const panelCount = solarPanel.current.length;
         const installationSize = (panelCount * panelCapacity) / 1000; // kWp
         const installationCost = panelCount * 1700000; // Assuming 1.7M IDR per panel
@@ -256,14 +317,21 @@ const SolarPlanning: React.FC = () => {
         const kgCO2 = yearlySolarProduction * co2PerKWh; // kg CO2 saved
         const treesNeeded = kgCO2 / kgCO2PerTree; // Equivalent number of trees
         const savings = yearlySolarProduction * electricityPrice; // Savings in Rp/year
-        const energyCoverage = yearlySolarProduction / energyConsumption.annual; // Green energy coverage
+        let annualConsumption = energyConsumption.annual;
+        if (energyType === "Monthly"){
+          annualConsumption = energyConsumption.monthly.reduce((acc: number, curr: number) => acc + Number(curr), 0);
+        }
+        var energyCoverage = yearlySolarProduction / annualConsumption; // Green energy coverage
+        console.log(annualConsumption);
         let neededEnergy = 0;
         let batteryStorageAh = 0;
         if (energyCoverage < 1) {
-          neededEnergy = energyConsumption.annual - yearlySolarProduction;
+          neededEnergy = annualConsumption - yearlySolarProduction;
+          
         } else {
+          var tambahan = yearlySolarProduction - annualConsumption;
           // Recommendation for battery storage (simplified assumption)
-          batteryStorageAh = (yearlySolarProduction * 1000) / (48 * 365); // Assume 48V system
+          batteryStorageAh = (tambahan * 1000) / (48 * 365); // Assume 48V system
         }
         // Set the result data
         setResultData({
@@ -330,7 +398,7 @@ const SolarPlanning: React.FC = () => {
             },
           ],
         };
-        console.log(chartData2);
+  
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
@@ -454,6 +522,113 @@ const SolarPlanning: React.FC = () => {
             {mapType === "roadmap" ? "🛰️" : "🗺️"}
           </Button>
         </div>
+        <div>
+      <div className="mt-6 gap-10 flex">
+      <Button onClick={() => setOpen(true)}>Select Module</Button>
+        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md">
+          <DialogTitle>Select Module</DialogTitle>
+          <DialogContent>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Model</TableCell>
+                  <TableCell>Rating</TableCell>
+                  <TableCell>Width (m)</TableCell>
+                  <TableCell>Height (m)</TableCell>
+                  <TableCell>Price (Rp)</TableCell>
+                  <TableCell>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {moduleData.map((module, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{module.model}</TableCell>
+                    <TableCell>{module.rating}</TableCell>
+                    <TableCell>{module.width}</TableCell>
+                    <TableCell>{module.height}</TableCell>
+                    <TableCell>{module.price}</TableCell>
+                    <TableCell>
+                      <Button onClick={() => handleSelect(module)}>Select</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {/* Row for custom input */}
+                <TableRow>
+                  <TableCell>
+                    <TextField
+                      label="Custom Model"
+                      name="model"
+                      value={customModule.model}
+                      onChange={handleCustomInput}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      label="Custom Rating"
+                      name="rating"
+                      value={customModule.rating}
+                      onChange={handleCustomInput}
+                      variant="outlined"
+                      size="small"
+                      type="number"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      label="Custom Width"
+                      name="width"
+                      value={customModule.width}
+                      onChange={handleCustomInput}
+                      variant="outlined"
+                      size="small"
+                      type="number"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      label="Custom Height"
+                      name="height"
+                      value={customModule.height}
+                      onChange={handleCustomInput}
+                      variant="outlined"
+                      size="small"
+                      type="number"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      label="Custom Price"
+                      name="price"
+                      value={customModule.price}
+                      onChange={handleCustomInput}
+                      variant="outlined"
+                      size="small"
+                      type="number"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button onClick={handleCustomSelect}>Select</Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </DialogContent>
+        </Dialog>
+        <div>
+          <h3>Selected Module:</h3>
+          <p><strong>Model:</strong> {selectedModule.model}</p>
+          <p><strong>Rating:</strong> {selectedModule.rating} W</p>
+          <p><strong>Width:</strong> {selectedModule.width} m</p>
+          <p><strong>Height:</strong> {selectedModule.height} m</p>
+        </div>
+      </div>
+      
+
+      
+    </div>
       </div>
 
       <div
